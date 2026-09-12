@@ -1,6 +1,6 @@
 'use client'
 
-import { fetchMyStore, fetchMyStores } from '@/core/api/stores'
+import { fetchMyStores } from '@/core/api/stores'
 import { normalizeEntityId } from '@/core/lib/normalize-entity-id'
 import { buildSubdomainUrl } from '@/core/lib/storefront'
 import type { Store, StoreAccessRole, StoreListItem } from '@/core/types/store'
@@ -25,9 +25,12 @@ type StoreContextValue = {
   stores: StoreListItem[]
   role: StoreAccessRole | null
   subdomainUrl: string | null
+  sessionStoreId: number | null
+  sessionStoreName: string | null
   isLoading: boolean
   refreshStores: () => Promise<StoreListItem[]>
   switchStore: (storeId: number) => Promise<boolean>
+  hydrateActiveStore: () => Promise<boolean>
   activateStoreSession: (
     store: Store,
     subdomainUrl: string,
@@ -62,6 +65,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [subdomainUrl, setSubdomainUrl] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [sessionStoreId, setSessionStoreId] = useState<number | null>(null)
+  const [sessionStoreName, setSessionStoreName] = useState<string | null>(null)
 
   useEffect(() => {
     void getStoreSession().then((session) => {
@@ -69,6 +73,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (normalized) {
         setSubdomainUrl(normalized.subdomainUrl)
         setSessionStoreId(normalized.storeId)
+        setSessionStoreName(normalized.name)
         setRole(normalized.role)
       }
     })
@@ -82,6 +87,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setSubdomainUrl(url)
       setRole(nextRole)
       setSessionStoreId(normalized.id)
+      setSessionStoreName(normalized.name)
       await persistSession(normalized, url, nextRole)
     },
     [],
@@ -118,12 +124,28 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [stores, refreshStores, activateStoreSession],
   )
 
+  const hydrateActiveStore = useCallback(async () => {
+    setIsLoading(true)
+    try {
+      const session = normalizeStoreSession(await getStoreSession())
+      if (!session) return false
+      setSessionStoreId(session.storeId)
+      setSessionStoreName(session.name)
+      setRole(session.role)
+      setSubdomainUrl(session.subdomainUrl)
+      return switchStore(session.storeId)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [switchStore])
+
   const clearStore = useCallback(async () => {
     setStore(null)
     setStores([])
     setRole(null)
     setSubdomainUrl(null)
     setSessionStoreId(null)
+    setSessionStoreName(null)
     await clearStoreSession()
   }, [])
 
@@ -133,9 +155,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       stores,
       role,
       subdomainUrl,
+      sessionStoreId,
+      sessionStoreName,
       isLoading,
       refreshStores,
       switchStore,
+      hydrateActiveStore,
       activateStoreSession,
       clearStore,
     }),
@@ -144,12 +169,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       stores,
       role,
       subdomainUrl,
+      sessionStoreId,
+      sessionStoreName,
       isLoading,
       refreshStores,
       switchStore,
+      hydrateActiveStore,
       activateStoreSession,
       clearStore,
-      sessionStoreId,
     ],
   )
 

@@ -121,7 +121,7 @@ function CreateStoreForm() {
       const res = await createStore(toCreateStorePayload(parsed.data))
       await refreshStores()
       await activateStoreSession(res.data.store, res.data.subdomainUrl, 'owner')
-      router.replace('/home')
+      router.replace('/products')
     } catch (e) {
       const code = getApiErrorCode(e)
       if (code === 'SLUG_EXISTS' || code === 'CONFLICT') {
@@ -157,7 +157,7 @@ function CreateStoreForm() {
       }
     >
       {isPlatformAdmin ? (
-        <Link href="/home" className="text-[14px] text-brand-green">
+        <Link href="/products" className="text-[14px] text-brand-green">
           Skip — open Admin home
         </Link>
       ) : null}

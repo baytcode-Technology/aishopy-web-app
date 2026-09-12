@@ -36,7 +36,7 @@ function SelectStoreContent() {
     selectingRef.current = true
     try {
       const ok = await switchStore(storeId)
-      if (ok) router.replace('/home')
+      if (ok) router.replace('/products')
     } finally {
       selectingRef.current = false
     }

@@ -50,13 +50,13 @@ export default function StoreCheckPage() {
         hasRoutedRef.current = true
 
         if (list.length === 0) {
-          router.replace(isAdmin ? '/home' : '/create-store')
+          router.replace(isAdmin ? '/products' : '/create-store')
           return
         }
 
         if (list.length === 1) {
           await switchStore(list[0].store.id)
-          router.replace('/home')
+          router.replace('/products')
           return
         }
 
