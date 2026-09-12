@@ -1,5 +1,6 @@
 'use client'
 
+import { CategoryImagePicker } from '@/components/catalog/CategoryImagePicker'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
@@ -15,7 +16,7 @@ type Props = {
   categories: Category[]
   initialParentId?: number
   onClose: () => void
-  onCreated: () => void
+  onCreated: (category?: Category) => void
 }
 
 export function CreateCategoryModal({
@@ -29,13 +30,16 @@ export function CreateCategoryModal({
   const [name, setName] = useState('')
   const [parentId, setParentId] = useState(initialParentId != null ? String(initialParentId) : '')
   const [file, setFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
   const reset = () => {
     setName('')
     setParentId(initialParentId != null ? String(initialParentId) : '')
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
     setFile(null)
+    setPreviewUrl(null)
     setError('')
   }
 
@@ -54,14 +58,14 @@ export function CreateCategoryModal({
     setError('')
     try {
       const imageUrl = file ? (await uploadProductImages(storeId, [file]))[0] : undefined
-      await createCategory({
+      const res = await createCategory({
         store_id: storeId,
         name: name.trim(),
         parent_id: parentId ? Number(parentId) : undefined,
         image_url: imageUrl,
       })
       reset()
-      onCreated()
+      onCreated(res.data)
     } catch (e) {
       setError(getErrorMessage(e, 'Could not create category'))
     } finally {
@@ -93,15 +97,20 @@ export function CreateCategoryModal({
             ))}
           </select>
         </label>
-        <label className="flex w-full flex-col gap-2">
-          <span className="text-[13px] font-bold tracking-wide text-gray-600">Cover image</span>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            className="text-[13px] text-gray-600"
-          />
-        </label>
+        <CategoryImagePicker
+          imageUri={previewUrl}
+          onPick={(next) => {
+            if (previewUrl) URL.revokeObjectURL(previewUrl)
+            setFile(next)
+            setPreviewUrl(URL.createObjectURL(next))
+          }}
+          onRemove={() => {
+            if (previewUrl) URL.revokeObjectURL(previewUrl)
+            setFile(null)
+            setPreviewUrl(null)
+          }}
+          label="Cover image"
+        />
         {error ? <p className="text-sm text-[#E11D48]">{error}</p> : null}
       </form>
     </Modal>

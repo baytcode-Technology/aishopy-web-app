@@ -10,6 +10,7 @@ import { DetailSection } from '@/components/catalog/DetailSection'
 import { Fab } from '@/components/catalog/Fab'
 import { ProductListRow } from '@/components/catalog/ProductListRow'
 import { Button } from '@/components/ui/Button'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
 import {
@@ -57,6 +58,8 @@ export default function CategoryDetailPage() {
   const [productModalOpen, setProductModalOpen] = useState(false)
   const [removingChildId, setRemovingChildId] = useState<number | null>(null)
   const [productsOpen, setProductsOpen] = useState(true)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const loadData = useCallback(async () => {
     if (!store?.id || !Number.isFinite(categoryId)) return
@@ -191,14 +194,15 @@ export default function CategoryDetailPage() {
   }
 
   const runDelete = async () => {
-    if (!category || !window.confirm(`Delete "${category.name}"? Products in this category will be removed from it (not deleted).`)) {
-      return
-    }
+    if (!category) return
+    setDeleting(true)
     try {
       await deleteCategory(category.id)
+      setDeleteOpen(false)
       router.replace('/products/categories')
     } catch (e) {
       setError(getErrorMessage(e, 'Could not delete category'))
+      setDeleting(false)
     }
   }
 
@@ -238,7 +242,7 @@ export default function CategoryDetailPage() {
             <button
               type="button"
               aria-label="Delete category"
-              onClick={() => void runDelete()}
+              onClick={() => setDeleteOpen(true)}
               className="flex h-9 w-9 items-center justify-center rounded-full text-[#E11D48]"
             >
               ⌫
@@ -411,6 +415,18 @@ export default function CategoryDetailPage() {
           />
         </>
       ) : null}
+
+      <ConfirmDialog
+        open={deleteOpen}
+        title="Delete category"
+        message={`Delete "${category.name}"? Products in this category will be removed from it (not deleted).`}
+        confirmLabel="Delete category"
+        loading={deleting}
+        onCancel={() => {
+          if (!deleting) setDeleteOpen(false)
+        }}
+        onConfirm={() => void runDelete()}
+      />
 
       <Modal
         open={editOpen}

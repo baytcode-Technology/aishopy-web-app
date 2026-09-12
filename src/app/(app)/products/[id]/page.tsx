@@ -2,21 +2,20 @@
 
 import { DetailHeader } from '@/components/catalog/DetailHeader'
 import { DetailSection } from '@/components/catalog/DetailSection'
+import { EditProductModal } from '@/components/catalog/EditProductModal'
+import { ProductCategoryRow } from '@/components/catalog/ProductCategoryRow'
+import { ProductDetailMediaSection } from '@/components/catalog/ProductDetailMediaSection'
+import { ProductInfoEditModal } from '@/components/catalog/ProductInfoEditModal'
 import { ProductStatusPicker } from '@/components/catalog/ProductStatusPicker'
 import { ProductVariantsSection } from '@/components/catalog/ProductVariantsSection'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
-import { Modal } from '@/components/ui/Modal'
 import { fetchCategories } from '@/core/api/categories'
 import { fetchProduct, updateProduct } from '@/core/api/products'
 import { getErrorMessage } from '@/core/lib/api-error'
 import { formatMoney } from '@/core/lib/format-money'
-import { parseOptionalPrice } from '@/core/lib/parse-optional-price'
 import { getProductStockDisplayValue } from '@/core/lib/product-inventory'
 import { getProductStatus } from '@/core/lib/product-status'
 import type { Category } from '@/core/types/category'
 import type { Product, ProductStatus, ProductVariant } from '@/core/types/product'
-import { uploadProductImages } from '@/platform/upload-images'
 import { useStore } from '@/providers/store-provider'
 import { useParams } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
@@ -32,13 +31,8 @@ export default function ProductDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
-  const [editOpen, setEditOpen] = useState(false)
-
-  const [name, setName] = useState('')
-  const [basePrice, setBasePrice] = useState('')
-  const [compareAtPrice, setCompareAtPrice] = useState('')
-  const [sku, setSku] = useState('')
-  const [description, setDescription] = useState('')
+  const [fullEditOpen, setFullEditOpen] = useState(false)
+  const [infoEditOpen, setInfoEditOpen] = useState(false)
 
   const load = useCallback(async () => {
     if (!Number.isFinite(id)) return
@@ -63,21 +57,12 @@ export default function ProductDetailPage() {
     void load()
   }, [load])
 
-  useEffect(() => {
-    if (!product) return
-    setName(product.name)
-    setBasePrice(String(product.base_price))
-    setCompareAtPrice(product.compare_at_price != null ? String(product.compare_at_price) : '')
-    setSku(product.sku ?? '')
-    setDescription(product.description ?? '')
-  }, [product])
-
   const flash = (message: string) => {
     setNotice(message)
     setError(null)
   }
 
-  const onVariantMessage = (type: 'ok' | 'err', text: string) => {
+  const onMessage = (type: 'ok' | 'err', text: string) => {
     if (type === 'ok') flash(text)
     else {
       setError(text)
@@ -99,38 +84,9 @@ export default function ProductDetailPage() {
     }
   }
 
-  const onSaveInfo = async () => {
-    const price = Number(basePrice)
-    const compareAt = parseOptionalPrice(compareAtPrice)
-    if (!name.trim()) {
-      setError('Name is required')
-      return
-    }
-    if (!Number.isFinite(price) || price < 0) {
-      setError('Enter a valid price')
-      return
-    }
-    if (compareAt === undefined) {
-      setError('Compare-at price must be a valid number')
-      return
-    }
-    await persist({
-      name: name.trim(),
-      base_price: price,
-      compare_at_price: compareAt,
-      sku: sku.trim() || null,
-      description: description.trim() || null,
-    })
-    setEditOpen(false)
-  }
-
   const onStatusChange = async (next: ProductStatus) => {
     if (!product || getProductStatus(product) === next) return
     await persist({ status: next, is_active: next === 'active' })
-  }
-
-  const onCategoryChange = async (value: string) => {
-    await persist({ category_id: value ? Number(value) : null })
   }
 
   const persistInventoryFlags = async (sold: boolean, nonInventory: boolean) => {
@@ -138,34 +94,6 @@ export default function ProductDetailPage() {
       mark_as_sold: sold,
       mark_as_non_inventory: nonInventory,
     })
-  }
-
-  const onUploadImages = async (files: FileList | null) => {
-    if (!product || !store || !files?.length) return
-    setSaving(true)
-    try {
-      const urls = await uploadProductImages(store.id, Array.from(files))
-      const images = [...product.images, ...urls]
-      await persist({
-        images,
-        thumbnail_url: product.thumbnail_url || urls[0] || '',
-      })
-    } catch (e) {
-      setError(getErrorMessage(e, 'Could not upload images'))
-      setSaving(false)
-    }
-  }
-
-  const onSetThumbnail = async (url: string) => {
-    if (!product) return
-    await persist({ thumbnail_url: url, images: product.images })
-  }
-
-  const onRemoveImage = async (url: string) => {
-    if (!product) return
-    const images = product.images.filter((item) => item !== url)
-    const thumbnail = product.thumbnail_url === url ? (images[0] ?? '') : (product.thumbnail_url ?? '')
-    await persist({ images, thumbnail_url: thumbnail })
   }
 
   if (loading) {
@@ -195,7 +123,7 @@ export default function ProductDetailPage() {
           <button
             type="button"
             aria-label="Edit product"
-            onClick={() => setEditOpen(true)}
+            onClick={() => setFullEditOpen(true)}
             className="flex h-9 w-9 items-center justify-center rounded-full text-ink"
           >
             ✎
@@ -207,42 +135,25 @@ export default function ProductDetailPage() {
         {notice ? <p className="text-sm font-semibold text-brand-green">{notice}</p> : null}
         {error ? <p className="text-sm text-[#E11D48]">{error}</p> : null}
 
-        <DetailSection className="p-3">
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {product.images.map((url) => (
-              <div key={url} className="w-[88px] shrink-0">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={url} alt="" className="h-[88px] w-[88px] rounded-xl object-cover" />
-                <div className="mt-1 flex flex-col gap-0.5">
-                  <button
-                    type="button"
-                    className="text-[11px] font-bold text-ink"
-                    onClick={() => void onSetThumbnail(url)}
-                  >
-                    {product.thumbnail_url === url ? 'Thumbnail' : 'Set thumb'}
-                  </button>
-                  <button
-                    type="button"
-                    className="text-[11px] font-bold text-[#E11D48]"
-                    onClick={() => void onRemoveImage(url)}
-                  >
-                    Remove
-                  </button>
-                </div>
-              </div>
-            ))}
-            <label className="flex h-[88px] w-[88px] shrink-0 cursor-pointer items-center justify-center rounded-xl border border-dashed border-gray-300 text-[11px] font-bold text-gray-500">
-              +
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                className="hidden"
-                onChange={(e) => void onUploadImages(e.target.files)}
-              />
-            </label>
-          </div>
-        </DetailSection>
+        {store ? (
+          <ProductDetailMediaSection
+            product={product}
+            storeId={store.id}
+            onProductUpdated={setProduct}
+            onMessage={onMessage}
+          />
+        ) : null}
+
+        {store ? (
+          <ProductCategoryRow
+            product={product}
+            storeId={store.id}
+            categories={categories}
+            onUpdated={setProduct}
+            onCategoriesChange={setCategories}
+            onMessage={onMessage}
+          />
+        ) : null}
 
         <DetailSection className="p-3">
           <ProductStatusPicker
@@ -253,27 +164,11 @@ export default function ProductDetailPage() {
           />
         </DetailSection>
 
-        <DetailSection className="p-3.5">
-          <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-gray-500">Category</p>
-          <select
-            className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-[15px] font-medium outline-none focus:border-ink"
-            value={product.category_id ?? ''}
-            onChange={(e) => void onCategoryChange(e.target.value)}
-          >
-            <option value="">No category</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </DetailSection>
-
         <DetailSection className="relative p-3.5">
           <button
             type="button"
             aria-label="Edit product details"
-            onClick={() => setEditOpen(true)}
+            onClick={() => setInfoEditOpen(true)}
             className="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 bg-gray-100 text-sm"
           >
             ✎
@@ -354,43 +249,30 @@ export default function ProductDetailPage() {
           onVariantDeleted={(variantId) => {
             setVariants((prev) => prev.filter((item) => item.id !== variantId))
           }}
-          onVariantCreated={(variant) => {
-            setVariants((prev) => [...prev, variant])
-          }}
-          onMessage={onVariantMessage}
+          onOptionsSaved={() => void load()}
+          onMessage={onMessage}
         />
       </div>
 
-      <Modal
-        open={editOpen}
-        title="Edit product"
-        onClose={() => setEditOpen(false)}
-        footer={<Button label="Save details" loading={saving} onClick={() => void onSaveInfo()} />}
-      >
-        <div className="flex flex-col gap-3">
-          <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} />
-          <Input
-            label="Base price"
-            value={basePrice}
-            onChange={(e) => setBasePrice(e.target.value)}
-            inputMode="decimal"
-          />
-          <Input
-            label="Compare-at price"
-            value={compareAtPrice}
-            onChange={(e) => setCompareAtPrice(e.target.value)}
-            inputMode="decimal"
-          />
-          <Input label="SKU" value={sku} onChange={(e) => setSku(e.target.value)} />
-          <Input
-            label="Description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            multiline
-          />
-        </div>
-      </Modal>
+      <EditProductModal
+        open={fullEditOpen}
+        product={product}
+        variants={variants}
+        categories={categories}
+        onClose={() => setFullEditOpen(false)}
+        onSaved={() => void load()}
+        onMessage={onMessage}
+      />
 
+      <ProductInfoEditModal
+        open={infoEditOpen}
+        product={product}
+        variantCount={variants.length}
+        currency={currency}
+        onClose={() => setInfoEditOpen(false)}
+        onUpdated={setProduct}
+        onMessage={onMessage}
+      />
     </main>
   )
 }

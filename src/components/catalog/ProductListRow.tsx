@@ -1,3 +1,4 @@
+import { EmptyThumb } from '@/components/catalog/EmptyThumb'
 import { ProductStatusBadge } from '@/components/catalog/ProductStatusBadge'
 import { getProductListStockLabel, stockLabelToneClass, variantStockSummary } from '@/core/lib/product-inventory'
 import type { Product } from '@/core/types/product'
@@ -25,7 +26,7 @@ export function ProductListRow({ product }: { product: Product }) {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={product.thumbnail_url} alt="" className="h-12 w-12 object-cover" />
         ) : (
-          <span className="text-[11px] font-bold text-gray-400">—</span>
+          <EmptyThumb />
         )}
       </div>
       <div className="min-w-0 flex-1 pr-2">

@@ -1,8 +1,8 @@
 'use client'
 
 import { DetailSection } from '@/components/catalog/DetailSection'
+import { ManageVariantOptionsModal } from '@/components/catalog/ManageVariantOptionsModal'
 import { VariantEditableCard } from '@/components/catalog/VariantEditableCard'
-import { VariantEditModal } from '@/components/catalog/VariantEditModal'
 import { Button } from '@/components/ui/Button'
 import type { Product, ProductVariant } from '@/core/types/product'
 import { useState } from 'react'
@@ -13,7 +13,7 @@ type Props = {
   currency?: string
   onVariantUpdated: (variant: ProductVariant) => void
   onVariantDeleted: (variantId: number) => void
-  onVariantCreated: (variant: ProductVariant) => void
+  onOptionsSaved: () => void
   onMessage: (type: 'ok' | 'err', text: string) => void
 }
 
@@ -23,26 +23,24 @@ export function ProductVariantsSection({
   currency,
   onVariantUpdated,
   onVariantDeleted,
-  onVariantCreated,
+  onOptionsSaved,
   onMessage,
 }: Props) {
   const [expanded, setExpanded] = useState(false)
-  const [addOpen, setAddOpen] = useState(false)
+  const [optionsOpen, setOptionsOpen] = useState(false)
 
   if (variants.length === 0) {
     return (
       <DetailSection className="p-3.5">
         <p className="mb-1 text-[13px] font-bold text-ink">Variants</p>
         <p className="mb-3 text-[13px] text-gray-500">No variants — single SKU product.</p>
-        <Button label="Add variant" variant="outline" onClick={() => setAddOpen(true)} />
-        <VariantEditModal
-          open={addOpen}
-          mode="add"
-          variant={null}
+        <Button label="Manage options" variant="outline" onClick={() => setOptionsOpen(true)} />
+        <ManageVariantOptionsModal
+          open={optionsOpen}
           product={product}
-          currency={currency}
-          onClose={() => setAddOpen(false)}
-          onSaved={onVariantCreated}
+          variants={variants}
+          onClose={() => setOptionsOpen(false)}
+          onSaved={onOptionsSaved}
           onMessage={onMessage}
         />
       </DetailSection>
@@ -62,7 +60,7 @@ export function ProductVariantsSection({
       </button>
 
       <div className="px-3.5 pb-3">
-        <Button label="Add variant" variant="outline" onClick={() => setAddOpen(true)} />
+        <Button label="Manage options" variant="outline" onClick={() => setOptionsOpen(true)} />
       </div>
 
       {expanded ? (
@@ -81,17 +79,12 @@ export function ProductVariantsSection({
         </div>
       ) : null}
 
-      <VariantEditModal
-        open={addOpen}
-        mode="add"
-        variant={null}
+      <ManageVariantOptionsModal
+        open={optionsOpen}
         product={product}
-        currency={currency}
-        onClose={() => setAddOpen(false)}
-        onSaved={(variant) => {
-          onVariantCreated(variant)
-          setExpanded(true)
-        }}
+        variants={variants}
+        onClose={() => setOptionsOpen(false)}
+        onSaved={onOptionsSaved}
         onMessage={onMessage}
       />
     </DetailSection>

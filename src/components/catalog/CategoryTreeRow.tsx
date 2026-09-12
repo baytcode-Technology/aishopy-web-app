@@ -1,3 +1,4 @@
+import { EmptyThumb } from '@/components/catalog/EmptyThumb'
 import { PRODUCT_STATUS_THEME } from '@/core/lib/product-status'
 import type { Category } from '@/core/types/category'
 import Link from 'next/link'
@@ -65,7 +66,7 @@ export function CategoryTreeRow({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={category.image_url} alt="" className="h-11 w-11 object-cover" />
         ) : (
-          <span className="text-[11px] font-bold text-gray-400">—</span>
+          <EmptyThumb />
         )}
       </div>
       {selectionMode ? (

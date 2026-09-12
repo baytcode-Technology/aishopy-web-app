@@ -1,17 +1,20 @@
 'use client'
 
+import { CategoryPicker } from '@/components/catalog/CategoryPicker'
 import {
   ProductImagePicker,
   revokePickedImages,
   type PickedProductImage,
 } from '@/components/catalog/ProductImagePicker'
 import { ProductStatusPicker } from '@/components/catalog/ProductStatusPicker'
+import { ShopifyVariantEditor } from '@/components/catalog/ShopifyVariantEditor'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
 import { createProduct } from '@/core/api/products'
 import { getErrorMessage } from '@/core/lib/api-error'
 import { parseOptionalPrice } from '@/core/lib/parse-optional-price'
+import { toCreateVariantPayload, type GeneratedVariant, type VariantOption } from '@/core/lib/variant-options'
 import type { Category } from '@/core/types/category'
 import type { ProductStatus } from '@/core/types/product'
 import { uploadProductImages } from '@/platform/upload-images'
@@ -39,20 +42,20 @@ export function CreateProductModal({
   const [compareAtPrice, setCompareAtPrice] = useState('')
   const [stockQty, setStockQty] = useState('0')
   const [sku, setSku] = useState('')
-  const [categoryId, setCategoryId] = useState(
-    initialCategoryId != null ? String(initialCategoryId) : '',
-  )
+  const [categoryId, setCategoryId] = useState<number | null>(initialCategoryId ?? null)
   const [status, setStatus] = useState<ProductStatus>('active')
   const [description, setDescription] = useState('')
   const [images, setImages] = useState<PickedProductImage[]>([])
   const [thumbnailId, setThumbnailId] = useState<string | null>(null)
+  const [variantOptions, setVariantOptions] = useState<VariantOption[]>([])
+  const [variants, setVariants] = useState<GeneratedVariant[]>([])
   const [imageError, setImageError] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (!open) return
-    setCategoryId(initialCategoryId != null ? String(initialCategoryId) : '')
+    setCategoryId(initialCategoryId ?? null)
   }, [open, initialCategoryId])
 
   const reset = () => {
@@ -61,12 +64,14 @@ export function CreateProductModal({
     setCompareAtPrice('')
     setStockQty('0')
     setSku('')
-    setCategoryId(initialCategoryId != null ? String(initialCategoryId) : '')
+    setCategoryId(initialCategoryId ?? null)
     setStatus('active')
     setDescription('')
     revokePickedImages(images)
     setImages([])
     setThumbnailId(null)
+    setVariantOptions([])
+    setVariants([])
     setImageError('')
     setError('')
   }
@@ -82,6 +87,7 @@ export function CreateProductModal({
     const price = Number(basePrice)
     const stock = Number(stockQty)
     const compareAt = parseOptionalPrice(compareAtPrice)
+    const hasVariants = variants.length > 0
 
     if (!trimmedName) {
       setError('Name is required')
@@ -95,7 +101,7 @@ export function CreateProductModal({
       setError('Compare-at price must be a valid number')
       return
     }
-    if (!Number.isFinite(stock) || stock < 0) {
+    if (!hasVariants && (!Number.isFinite(stock) || stock < 0)) {
       setError('Stock must be a valid number')
       return
     }
@@ -106,6 +112,12 @@ export function CreateProductModal({
     if (!thumbnailId) {
       setImageError('Select a thumbnail image')
       return
+    }
+    for (const variant of variants) {
+      if (parseOptionalPrice(variant.compareAtPrice) === undefined) {
+        setError(`Invalid compare at price for ${variant.name}`)
+        return
+      }
     }
 
     setError('')
@@ -118,9 +130,7 @@ export function CreateProductModal({
       )
       const thumbIndex = images.findIndex((image) => image.id === thumbnailId)
       const thumbnailUrl = urls[thumbIndex] ?? urls[0]
-      if (!thumbnailUrl) {
-        throw new Error('Image upload failed')
-      }
+      if (!thumbnailUrl) throw new Error('Image upload failed')
       await createProduct({
         store_id: storeId,
         name: trimmedName,
@@ -130,10 +140,15 @@ export function CreateProductModal({
         thumbnail_url: thumbnailUrl,
         description: description.trim() || undefined,
         sku: sku.trim() || undefined,
-        stock_qty: stock,
+        stock_qty: hasVariants ? 0 : stock,
+        track_inventory: hasVariants || stock > 0,
         status,
         is_active: status === 'active',
-        category_id: categoryId ? Number(categoryId) : undefined,
+        category_id: categoryId ?? undefined,
+        variants: variants.map((variant, index) => ({
+          ...toCreateVariantPayload(variant),
+          sort_order: index,
+        })),
       })
       reset()
       onCreated()
@@ -162,21 +177,7 @@ export function CreateProductModal({
           }}
           error={imageError}
         />
-        <label className="flex w-full flex-col gap-2">
-          <span className="text-[13px] font-bold tracking-wide text-gray-600">Category</span>
-          <select
-            className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3.5 text-[15px] font-medium text-ink outline-none focus:border-ink focus:bg-surface"
-            value={categoryId}
-            onChange={(e) => setCategoryId(e.target.value)}
-          >
-            <option value="">No category</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </label>
+        <CategoryPicker categories={categories} selectedId={categoryId} onSelect={setCategoryId} />
         <ProductStatusPicker value={status} onChange={setStatus} />
         <Input label="Product name *" value={name} onChange={(e) => setName(e.target.value)} />
         <Input
@@ -191,13 +192,24 @@ export function CreateProductModal({
           onChange={(e) => setCompareAtPrice(e.target.value)}
           inputMode="decimal"
         />
-        <Input
-          label="Stock quantity"
-          value={stockQty}
-          onChange={(e) => setStockQty(e.target.value)}
-          inputMode="numeric"
-        />
+        {variants.length === 0 ? (
+          <Input
+            label="Stock quantity"
+            value={stockQty}
+            onChange={(e) => setStockQty(e.target.value)}
+            inputMode="numeric"
+          />
+        ) : null}
         <Input label="SKU" value={sku} onChange={(e) => setSku(e.target.value)} />
+        <ShopifyVariantEditor
+          options={variantOptions}
+          variants={variants}
+          showVariantImages={false}
+          onChange={(options, nextVariants) => {
+            setVariantOptions(options)
+            setVariants(nextVariants)
+          }}
+        />
         <Input
           label="Description"
           value={description}
