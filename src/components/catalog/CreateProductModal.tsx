@@ -1,5 +1,10 @@
 'use client'
 
+import {
+  ProductImagePicker,
+  revokePickedImages,
+  type PickedProductImage,
+} from '@/components/catalog/ProductImagePicker'
 import { ProductStatusPicker } from '@/components/catalog/ProductStatusPicker'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -39,7 +44,9 @@ export function CreateProductModal({
   )
   const [status, setStatus] = useState<ProductStatus>('active')
   const [description, setDescription] = useState('')
-  const [files, setFiles] = useState<File[]>([])
+  const [images, setImages] = useState<PickedProductImage[]>([])
+  const [thumbnailId, setThumbnailId] = useState<string | null>(null)
+  const [imageError, setImageError] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -57,7 +64,10 @@ export function CreateProductModal({
     setCategoryId(initialCategoryId != null ? String(initialCategoryId) : '')
     setStatus('active')
     setDescription('')
-    setFiles([])
+    revokePickedImages(images)
+    setImages([])
+    setThumbnailId(null)
+    setImageError('')
     setError('')
   }
 
@@ -89,18 +99,35 @@ export function CreateProductModal({
       setError('Stock must be a valid number')
       return
     }
+    if (images.length === 0) {
+      setImageError('At least one product image is required')
+      return
+    }
+    if (!thumbnailId) {
+      setImageError('Select a thumbnail image')
+      return
+    }
 
     setError('')
+    setImageError('')
     setLoading(true)
     try {
-      const urls = files.length > 0 ? await uploadProductImages(storeId, files) : []
+      const urls = await uploadProductImages(
+        storeId,
+        images.map((image) => image.file),
+      )
+      const thumbIndex = images.findIndex((image) => image.id === thumbnailId)
+      const thumbnailUrl = urls[thumbIndex] ?? urls[0]
+      if (!thumbnailUrl) {
+        throw new Error('Image upload failed')
+      }
       await createProduct({
         store_id: storeId,
         name: trimmedName,
         base_price: price,
         compare_at_price: compareAt,
         images: urls,
-        thumbnail_url: urls[0] ?? '',
+        thumbnail_url: thumbnailUrl,
         description: description.trim() || undefined,
         sku: sku.trim() || undefined,
         stock_qty: stock,
@@ -125,19 +152,16 @@ export function CreateProductModal({
       footer={<Button label="Create product" loading={loading} onClick={() => void onSubmit()} />}
     >
       <form className="flex flex-col gap-4" onSubmit={onSubmit}>
-        <label className="flex w-full flex-col gap-2">
-          <span className="text-[13px] font-bold tracking-wide text-gray-600">Images</span>
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
-            className="text-[13px] text-gray-600"
-          />
-          {files.length > 0 ? (
-            <p className="text-[12px] text-gray-500">{files.length} file(s) selected</p>
-          ) : null}
-        </label>
+        <ProductImagePicker
+          images={images}
+          thumbnailId={thumbnailId}
+          onChange={(nextImages, nextThumb) => {
+            setImages(nextImages)
+            setThumbnailId(nextThumb)
+            if (nextImages.length > 0 && nextThumb) setImageError('')
+          }}
+          error={imageError}
+        />
         <label className="flex w-full flex-col gap-2">
           <span className="text-[13px] font-bold tracking-wide text-gray-600">Category</span>
           <select
