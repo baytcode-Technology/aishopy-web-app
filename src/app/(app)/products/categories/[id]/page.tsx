@@ -10,6 +10,7 @@ import { DetailSection } from '@/components/catalog/DetailSection'
 import { Fab } from '@/components/catalog/Fab'
 import { ProductListRow } from '@/components/catalog/ProductListRow'
 import { Button } from '@/components/ui/Button'
+import { CategoryDetailSkeleton } from '@/components/ui/Skeleton'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
@@ -207,11 +208,7 @@ export default function CategoryDetailPage() {
   }
 
   if (loading) {
-    return (
-      <main className="bg-gray-100 px-5 py-10">
-        <p className="text-sm font-semibold text-gray-500">Loading category…</p>
-      </main>
-    )
+    return <CategoryDetailSkeleton />
   }
 
   if (!category) {

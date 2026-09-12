@@ -8,6 +8,7 @@ import { ProductDetailMediaSection } from '@/components/catalog/ProductDetailMed
 import { ProductInfoEditModal } from '@/components/catalog/ProductInfoEditModal'
 import { ProductStatusPicker } from '@/components/catalog/ProductStatusPicker'
 import { ProductVariantsSection } from '@/components/catalog/ProductVariantsSection'
+import { ProductDetailSkeleton } from '@/components/ui/Skeleton'
 import { fetchCategories } from '@/core/api/categories'
 import { fetchProduct, updateProduct } from '@/core/api/products'
 import { getErrorMessage } from '@/core/lib/api-error'
@@ -97,11 +98,7 @@ export default function ProductDetailPage() {
   }
 
   if (loading) {
-    return (
-      <main className="bg-gray-100 px-5 py-10">
-        <p className="text-sm font-semibold text-gray-500">Loading product…</p>
-      </main>
-    )
+    return <ProductDetailSkeleton />
   }
 
   if (!product) {

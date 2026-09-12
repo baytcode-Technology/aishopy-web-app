@@ -6,6 +6,7 @@ import { Fab } from '@/components/catalog/Fab'
 import { PillTabs } from '@/components/catalog/PillTabs'
 import { ProductListRow } from '@/components/catalog/ProductListRow'
 import { SearchBar } from '@/components/catalog/SearchBar'
+import { ProductListSkeleton } from '@/components/ui/Skeleton'
 import { fetchCategories } from '@/core/api/categories'
 import { fetchProducts } from '@/core/api/products'
 import { getErrorMessage } from '@/core/lib/api-error'
@@ -109,7 +110,9 @@ export default function ProductsPage() {
       {loading ? (
         <div className="pt-2">
           {listHeader}
-          <p className="px-5 pt-6 text-sm font-semibold text-gray-500">Loading products…</p>
+          <div className="px-5">
+            <ProductListSkeleton />
+          </div>
         </div>
       ) : !store ? (
         <p className="px-5 pt-8 text-sm text-gray-500">

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 
 type Props = {
-  title: string
+  title: ReactNode
   backHref: string
   right?: ReactNode
 }
