@@ -1,28 +1,23 @@
-import Link from 'next/link'
+'use client'
 
-export default function HomePage() {
+import { AppLogo } from '@/components/brand/AppLogo'
+import { useAuth } from '@/providers/auth-provider'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
+
+export default function HomeGatePage() {
+  const { isLoading, isAuthenticated } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (isLoading) return
+    router.replace(isAuthenticated ? '/store-check' : '/login')
+  }, [isAuthenticated, isLoading, router])
+
   return (
-    <main className="mx-auto flex min-h-screen max-w-lg flex-col justify-center px-6 py-16">
-      <p className="text-sm font-medium text-brand-green">app.aishopy.io</p>
-      <h1 className="mt-2 text-3xl font-semibold tracking-tight">AiShopy</h1>
-      <p className="mt-3 text-zinc-600">
-        Merchant web app. Log in or create a store here, then use the same
-        account in the Android and iOS apps.
-      </p>
-      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-        <Link
-          href="/login"
-          className="inline-flex items-center justify-center rounded-lg bg-brand-green px-4 py-2.5 text-sm font-medium text-white"
-        >
-          Log in
-        </Link>
-        <Link
-          href="/signup"
-          className="inline-flex items-center justify-center rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm font-medium"
-        >
-          Create store
-        </Link>
-      </div>
+    <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-gray-100">
+      <AppLogo href="" />
+      <p className="text-sm font-semibold text-gray-500">Preparing your workspace…</p>
     </main>
   )
 }
