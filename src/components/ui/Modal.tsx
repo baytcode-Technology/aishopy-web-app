@@ -3,12 +3,13 @@ import type { ReactNode } from 'react'
 type Props = {
   open: boolean
   title: string
+  subtitle?: string
   onClose: () => void
   children: ReactNode
   footer?: ReactNode
 }
 
-export function Modal({ open, title, onClose, children, footer }: Props) {
+export function Modal({ open, title, subtitle, onClose, children, footer }: Props) {
   if (!open) return null
 
   return (
@@ -21,7 +22,10 @@ export function Modal({ open, title, onClose, children, footer }: Props) {
       />
       <div className="relative z-10 flex max-h-[92vh] w-full max-w-lg flex-col rounded-t-3xl bg-surface shadow-xl lg:rounded-3xl">
         <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
-          <h2 className="text-lg font-semibold tracking-tight text-ink">{title}</h2>
+          <div className="min-w-0 pr-3">
+            <h2 className="text-lg font-semibold tracking-tight text-ink">{title}</h2>
+            {subtitle ? <p className="mt-0.5 truncate text-[13px] text-gray-500">{subtitle}</p> : null}
+          </div>
           <button
             type="button"
             onClick={onClose}

@@ -82,6 +82,32 @@ export function getProductListStockLabel(product: Product): ProductStockLabel | 
   return { text: 'Custom', tone: 'default' }
 }
 
+export function effectiveVariantStockQty(product: Product, variant: ProductVariant): number {
+  if (isMarkedSoldVariant(product, variant, true)) return 0
+  return variant.stock_qty
+}
+
+export function getVariantCardInventoryFlags(
+  _product: Product,
+  variant: ProductVariant,
+): { showSoldOut: boolean; showNonInventory: boolean } {
+  return {
+    showSoldOut: variant.mark_as_sold === true,
+    showNonInventory: variant.mark_as_non_inventory === true,
+  }
+}
+
+export function getVariantAvailabilityLabel(
+  product: Product,
+  variant: ProductVariant,
+): ProductStockLabel | null {
+  if (isNonInventoryVariant(product, variant, true)) return null
+  if (!product.track_inventory) return null
+  const qty = effectiveVariantStockQty(product, variant)
+  const text = qty === 1 ? '1 available' : `${qty} available`
+  return { text, tone: qty <= 0 ? 'danger' : 'default' }
+}
+
 export function getProductStockDisplayValue(product: Product): string {
   if (isNonInventoryProduct(product, false)) return '—'
   if (!product.track_inventory) return '—'

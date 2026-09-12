@@ -10,6 +10,9 @@ type Props = {
   expanded?: boolean
   breadcrumb?: string
   onToggleExpand?: () => void
+  selectionMode?: boolean
+  selected?: boolean
+  onSelect?: () => void
 }
 
 export function CategoryTreeRow({
@@ -20,6 +23,9 @@ export function CategoryTreeRow({
   expanded = false,
   breadcrumb,
   onToggleExpand,
+  selectionMode = false,
+  selected = false,
+  onSelect,
 }: Props) {
   const count = category.product_count ?? 0
   const countLabel =
@@ -30,9 +36,16 @@ export function CategoryTreeRow({
         : `${count} products`
   const theme = PRODUCT_STATUS_THEME[category.is_active ? 'active' : 'unlisted']
 
+  const body = (
+    <>
+      <p className="truncate text-[15px] font-semibold text-ink">{category.name}</p>
+      <p className="mt-0.5 truncate text-[13px] text-gray-500">{breadcrumb ?? countLabel}</p>
+    </>
+  )
+
   return (
     <div
-      className="flex items-center gap-2 border-b border-gray-200 py-3.5"
+      className={`flex items-center gap-2 border-b border-gray-200 py-3.5 ${selected ? 'bg-gray-50' : ''}`}
       style={{ paddingLeft: depth * 20 }}
     >
       {hasChildren ? (
@@ -55,10 +68,15 @@ export function CategoryTreeRow({
           <span className="text-[11px] font-bold text-gray-400">—</span>
         )}
       </div>
-      <Link href={`/products/categories/${category.id}`} className="min-w-0 flex-1">
-        <p className="truncate text-[15px] font-semibold text-ink">{category.name}</p>
-        <p className="mt-0.5 truncate text-[13px] text-gray-500">{breadcrumb ?? countLabel}</p>
-      </Link>
+      {selectionMode ? (
+        <button type="button" onClick={onSelect} className="min-w-0 flex-1 text-left">
+          {body}
+        </button>
+      ) : (
+        <Link href={`/products/categories/${category.id}`} className="min-w-0 flex-1">
+          {body}
+        </Link>
+      )}
       <span
         className="rounded-full px-2.5 py-1 text-[12px] font-semibold"
         style={{ backgroundColor: theme.badgeBg, color: theme.badgeText }}

@@ -1,8 +1,13 @@
 'use client'
 
+import { CategoryDetailCover } from '@/components/catalog/CategoryDetailCover'
+import { CategoryTreeModal } from '@/components/catalog/CategoryTreeModal'
+import { CategoryTreeRow } from '@/components/catalog/CategoryTreeRow'
 import { CreateCategoryModal } from '@/components/catalog/CreateCategoryModal'
+import { CreateProductModal } from '@/components/catalog/CreateProductModal'
 import { DetailHeader } from '@/components/catalog/DetailHeader'
 import { DetailSection } from '@/components/catalog/DetailSection'
+import { Fab } from '@/components/catalog/Fab'
 import { ProductListRow } from '@/components/catalog/ProductListRow'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -15,13 +20,15 @@ import {
 } from '@/core/api/categories'
 import { fetchProducts } from '@/core/api/products'
 import { getErrorMessage } from '@/core/lib/api-error'
-import { getCategoryBreadcrumb, getDirectChildren } from '@/core/lib/category-tree'
+import {
+  getAttachableCategories,
+  getCategoryBreadcrumb,
+  getDirectChildren,
+} from '@/core/lib/category-tree'
 import { PRODUCT_STATUS_THEME } from '@/core/lib/product-status'
 import type { Category } from '@/core/types/category'
 import type { Product } from '@/core/types/product'
-import { uploadProductImages } from '@/platform/upload-images'
 import { useStore } from '@/providers/store-provider'
-import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
@@ -46,7 +53,9 @@ export default function CategoryDetailPage() {
   const [assignOpen, setAssignOpen] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   const [childModalOpen, setChildModalOpen] = useState(false)
-  const [subsOpen, setSubsOpen] = useState(true)
+  const [attachExistingOpen, setAttachExistingOpen] = useState(false)
+  const [productModalOpen, setProductModalOpen] = useState(false)
+  const [removingChildId, setRemovingChildId] = useState<number | null>(null)
   const [productsOpen, setProductsOpen] = useState(true)
 
   const loadData = useCallback(async () => {
@@ -89,9 +98,28 @@ export default function CategoryDetailPage() {
   }, [category])
 
   const children = useMemo(
-    () => (category ? getDirectChildren(category.id, categories) : []),
-    [category, categories],
+    () =>
+      (category ? getDirectChildren(category.id, categories) : []).map((child) => ({
+        ...child,
+        product_count: allProducts.filter((product) => product.category_id === child.id).length,
+      })),
+    [category, categories, allProducts],
   )
+
+  const attachableCategories = useMemo(
+    () => (Number.isFinite(categoryId) ? getAttachableCategories(categoryId, categories) : []),
+    [categoryId, categories],
+  )
+
+  const onMessage = (type: 'ok' | 'err', text: string) => {
+    if (type === 'ok') {
+      setNotice(text)
+      setError(null)
+    } else {
+      setError(text)
+      setNotice(null)
+    }
+  }
 
   const saveInfo = async () => {
     if (!category) return
@@ -117,18 +145,28 @@ export default function CategoryDetailPage() {
     }
   }
 
-  const onCoverUpload = async (file: File | null) => {
-    if (!category || !store || !file) return
-    setSaving(true)
+  const attachExisting = async (childId: number | null) => {
+    if (!childId || childId === categoryId) return
     try {
-      const [url] = await uploadProductImages(store.id, [file])
-      const res = await updateCategory(category.id, { image_url: url })
-      setCategory(res.data)
-      setNotice('Cover updated')
+      await updateCategory(childId, { parent_id: categoryId })
+      setAttachExistingOpen(false)
+      onMessage('ok', 'Subcategory added')
+      await loadData()
     } catch (e) {
-      setError(getErrorMessage(e, 'Could not upload cover'))
+      onMessage('err', getErrorMessage(e, 'Could not add subcategory'))
+    }
+  }
+
+  const detachChild = async (childId: number) => {
+    setRemovingChildId(childId)
+    try {
+      await updateCategory(childId, { parent_id: null })
+      onMessage('ok', 'Removed from this category')
+      await loadData()
+    } catch (e) {
+      onMessage('err', getErrorMessage(e, 'Could not remove subcategory'))
     } finally {
-      setSaving(false)
+      setRemovingChildId(null)
     }
   }
 
@@ -183,7 +221,7 @@ export default function CategoryDetailPage() {
   const badge = PRODUCT_STATUS_THEME[category.is_active ? 'active' : 'unlisted']
 
   return (
-    <main className="min-h-full bg-gray-100 pb-10">
+    <main className="min-h-full bg-gray-100 pb-28">
       <DetailHeader
         title={category.name}
         backHref="/products/categories"
@@ -213,22 +251,14 @@ export default function CategoryDetailPage() {
         {notice ? <p className="mb-3 text-sm font-semibold text-brand-green">{notice}</p> : null}
         {error ? <p className="mb-3 text-sm text-[#E11D48]">{error}</p> : null}
 
-        <label className="mb-4 block overflow-hidden rounded-[20px] border border-gray-200 bg-surface">
-          {category.image_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={category.image_url} alt="" className="h-44 w-full object-cover" />
-          ) : (
-            <div className="flex h-44 items-center justify-center text-sm font-semibold text-gray-400">
-              Tap to add cover
-            </div>
-          )}
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => void onCoverUpload(e.target.files?.[0] ?? null)}
+        {store ? (
+          <CategoryDetailCover
+            category={category}
+            storeId={store.id}
+            onUpdated={setCategory}
+            onMessage={onMessage}
           />
-        </label>
+        ) : null}
 
         <span
           className="mb-4 inline-flex rounded-full px-2.5 py-1 text-[12px] font-semibold"
@@ -270,41 +300,47 @@ export default function CategoryDetailPage() {
           </p>
         ) : null}
 
-        <section className="-mx-5 mb-6">
-          <div className="flex items-center border-y border-gray-100 bg-gray-50">
-            <button
-              type="button"
-              onClick={() => setSubsOpen((value) => !value)}
-              className="flex flex-1 items-center justify-between px-5 py-3.5 text-left"
-            >
-              <span className="text-[15px] font-bold text-ink">Subcategories · {children.length}</span>
-              <span className="text-ink">{subsOpen ? '▾' : '▸'}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setChildModalOpen(true)}
-              className="border-l border-gray-100 px-4 py-3.5 text-[12px] font-bold text-ink"
-            >
-              Add
-            </button>
+        <section className="mb-6">
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-[13px] font-bold uppercase tracking-wide text-gray-500">Subcategories</p>
+            <p className="text-[13px] text-gray-500">{children.length}</p>
           </div>
-          {subsOpen ? (
-            <div className="px-5">
-              {children.length === 0 ? (
-                <p className="py-3 text-sm text-gray-500">No subcategories yet.</p>
-              ) : (
-                children.map((child) => (
-                  <Link
-                    key={child.id}
-                    href={`/products/categories/${child.id}`}
-                    className="block border-b border-gray-200 py-3.5 font-semibold text-ink"
-                  >
-                    {child.name}
-                  </Link>
-                ))
-              )}
+          {children.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 px-4 py-5 text-center">
+              <p className="text-[14px] text-gray-500">
+                No subcategories yet. Create one, or add an existing category here.
+              </p>
+              <div className="mt-4 flex flex-col gap-2">
+                <Button label="Add subcategory" variant="outline" onClick={() => setChildModalOpen(true)} />
+                <Button label="Add existing" variant="outline" onClick={() => setAttachExistingOpen(true)} />
+              </div>
             </div>
-          ) : null}
+          ) : (
+            <>
+              <div className="overflow-hidden rounded-xl border border-gray-200 px-3">
+                {children.map((child) => (
+                  <div key={child.id} className="flex items-center">
+                    <div className="min-w-0 flex-1">
+                      <CategoryTreeRow category={child} />
+                    </div>
+                    <button
+                      type="button"
+                      aria-label={`Remove ${child.name} from parent`}
+                      disabled={removingChildId === child.id}
+                      onClick={() => void detachChild(child.id)}
+                      className="ml-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-gray-400 disabled:opacity-40"
+                    >
+                      ⤢
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-3 flex flex-col gap-2">
+                <Button label="Add subcategory" variant="outline" onClick={() => setChildModalOpen(true)} />
+                <Button label="Add existing" variant="outline" onClick={() => setAttachExistingOpen(true)} />
+              </div>
+            </>
+          )}
         </section>
 
         <section className="-mx-5 mb-6">
@@ -338,17 +374,42 @@ export default function CategoryDetailPage() {
       </div>
 
       {store ? (
-        <CreateCategoryModal
-          open={childModalOpen}
-          storeId={store.id}
-          categories={categories}
-          initialParentId={category.id}
-          onClose={() => setChildModalOpen(false)}
-          onCreated={() => {
-            setChildModalOpen(false)
-            void loadData()
-          }}
-        />
+        <>
+          <Fab onClick={() => setProductModalOpen(true)} label="Create product" />
+          <CreateProductModal
+            open={productModalOpen}
+            storeId={store.id}
+            categories={categories}
+            initialCategoryId={category.id}
+            onClose={() => setProductModalOpen(false)}
+            onCreated={() => {
+              setProductModalOpen(false)
+              onMessage('ok', 'Product created')
+              void loadData()
+            }}
+          />
+          <CreateCategoryModal
+            open={childModalOpen}
+            storeId={store.id}
+            categories={categories}
+            initialParentId={category.id}
+            onClose={() => setChildModalOpen(false)}
+            onCreated={() => {
+              setChildModalOpen(false)
+              void loadData()
+            }}
+          />
+          <CategoryTreeModal
+            open={attachExistingOpen}
+            onClose={() => setAttachExistingOpen(false)}
+            categories={attachableCategories}
+            selectedId={null}
+            onSelect={(id) => void attachExisting(id)}
+            title="Add existing category"
+            subtitle="Nest another category under this one"
+            showNoneOption={false}
+          />
+        </>
       ) : null}
 
       <Modal

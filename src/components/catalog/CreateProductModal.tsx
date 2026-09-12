@@ -10,7 +10,7 @@ import { parseOptionalPrice } from '@/core/lib/parse-optional-price'
 import type { Category } from '@/core/types/category'
 import type { ProductStatus } from '@/core/types/product'
 import { uploadProductImages } from '@/platform/upload-images'
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 
 type Props = {
   open: boolean
@@ -42,6 +42,11 @@ export function CreateProductModal({
   const [files, setFiles] = useState<File[]>([])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (!open) return
+    setCategoryId(initialCategoryId != null ? String(initialCategoryId) : '')
+  }, [open, initialCategoryId])
 
   const reset = () => {
     setName('')
