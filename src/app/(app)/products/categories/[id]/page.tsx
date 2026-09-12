@@ -1,6 +1,9 @@
 'use client'
 
 import { CreateCategoryModal } from '@/components/catalog/CreateCategoryModal'
+import { DetailHeader } from '@/components/catalog/DetailHeader'
+import { DetailSection } from '@/components/catalog/DetailSection'
+import { ProductListRow } from '@/components/catalog/ProductListRow'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
@@ -13,6 +16,7 @@ import {
 import { fetchProducts } from '@/core/api/products'
 import { getErrorMessage } from '@/core/lib/api-error'
 import { getCategoryBreadcrumb, getDirectChildren } from '@/core/lib/category-tree'
+import { PRODUCT_STATUS_THEME } from '@/core/lib/product-status'
 import type { Category } from '@/core/types/category'
 import type { Product } from '@/core/types/product'
 import { uploadProductImages } from '@/platform/upload-images'
@@ -20,15 +24,6 @@ import { useStore } from '@/providers/store-provider'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="rounded-2xl border border-gray-200 bg-surface p-4">
-      <h2 className="mb-3 text-[11px] font-bold uppercase tracking-wide text-gray-500">{title}</h2>
-      {children}
-    </section>
-  )
-}
 
 export default function CategoryDetailPage() {
   const params = useParams<{ id: string }>()
@@ -44,13 +39,15 @@ export default function CategoryDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
-
+  const [editOpen, setEditOpen] = useState(false)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [isActive, setIsActive] = useState(true)
   const [assignOpen, setAssignOpen] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   const [childModalOpen, setChildModalOpen] = useState(false)
+  const [subsOpen, setSubsOpen] = useState(true)
+  const [productsOpen, setProductsOpen] = useState(true)
 
   const loadData = useCallback(async () => {
     if (!store?.id || !Number.isFinite(categoryId)) return
@@ -112,6 +109,7 @@ export default function CategoryDetailPage() {
       setCategory(res.data)
       setNotice('Saved')
       setError(null)
+      setEditOpen(false)
     } catch (e) {
       setError(getErrorMessage(e, 'Could not update category'))
     } finally {
@@ -154,20 +152,10 @@ export default function CategoryDetailPage() {
     }
   }
 
-  const removeProduct = async (productId: number) => {
-    if (!store || !category) return
-    const next = products.filter((item) => item.id !== productId).map((item) => item.id)
-    try {
-      await syncCategoryProducts(store.id, category.id, next)
-      setNotice('Product removed')
-      await loadData()
-    } catch (e) {
-      setError(getErrorMessage(e, 'Could not remove product'))
-    }
-  }
-
   const runDelete = async () => {
-    if (!category || !window.confirm('Delete this category? Products will be uncategorized.')) return
+    if (!category || !window.confirm(`Delete "${category.name}"? Products in this category will be removed from it (not deleted).`)) {
+      return
+    }
     try {
       await deleteCategory(category.id)
       router.replace('/products/categories')
@@ -178,7 +166,7 @@ export default function CategoryDetailPage() {
 
   if (loading) {
     return (
-      <main className="px-5 py-10">
+      <main className="bg-gray-100 px-5 py-10">
         <p className="text-sm font-semibold text-gray-500">Loading category…</p>
       </main>
     )
@@ -186,115 +174,167 @@ export default function CategoryDetailPage() {
 
   if (!category) {
     return (
-      <main className="px-5 py-10">
+      <main className="bg-gray-100 px-5 py-10">
         <p className="text-sm font-semibold text-gray-600">{error ?? 'Category not found'}</p>
-        <Link href="/products/categories" className="mt-4 inline-block text-sm font-semibold text-brand-green">
-          Back to categories
-        </Link>
       </main>
     )
   }
 
+  const badge = PRODUCT_STATUS_THEME[category.is_active ? 'active' : 'unlisted']
+
   return (
-    <main className="mx-auto w-full max-w-3xl px-5 py-6">
-      <Link href="/products/categories" className="text-[13px] font-semibold text-gray-500">
-        ← Categories
-      </Link>
-      <div className="mb-5 mt-3 flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{category.name}</h1>
-          {category.parent_id ? (
-            <p className="mt-1 text-[13px] text-gray-500">
-              {getCategoryBreadcrumb(category.id, categories)}
-            </p>
-          ) : null}
-        </div>
-        <button type="button" onClick={() => void runDelete()} className="text-[13px] font-bold text-[#E11D48]">
-          Delete
-        </button>
-      </div>
+    <main className="min-h-full bg-gray-100 pb-10">
+      <DetailHeader
+        title={category.name}
+        backHref="/products/categories"
+        right={
+          <>
+            <button
+              type="button"
+              aria-label="Edit category"
+              onClick={() => setEditOpen(true)}
+              className="flex h-9 w-9 items-center justify-center rounded-full text-ink"
+            >
+              ✎
+            </button>
+            <button
+              type="button"
+              aria-label="Delete category"
+              onClick={() => void runDelete()}
+              className="flex h-9 w-9 items-center justify-center rounded-full text-[#E11D48]"
+            >
+              ⌫
+            </button>
+          </>
+        }
+      />
 
-      {notice ? <p className="mb-3 text-sm font-semibold text-brand-green">{notice}</p> : null}
-      {error ? <p className="mb-3 text-sm text-[#E11D48]">{error}</p> : null}
+      <div className="px-5 pt-5">
+        {notice ? <p className="mb-3 text-sm font-semibold text-brand-green">{notice}</p> : null}
+        {error ? <p className="mb-3 text-sm text-[#E11D48]">{error}</p> : null}
 
-      <div className="flex flex-col gap-3">
-        <Section title="Cover">
+        <label className="mb-4 block overflow-hidden rounded-[20px] border border-gray-200 bg-surface">
           {category.image_url ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={category.image_url} alt="" className="mb-3 h-40 w-full rounded-2xl object-cover" />
+            <img src={category.image_url} alt="" className="h-44 w-full object-cover" />
           ) : (
-            <p className="mb-3 text-sm text-gray-400">No cover image</p>
+            <div className="flex h-44 items-center justify-center text-sm font-semibold text-gray-400">
+              Tap to add cover
+            </div>
           )}
           <input
             type="file"
             accept="image/*"
+            className="hidden"
             onChange={(e) => void onCoverUpload(e.target.files?.[0] ?? null)}
           />
-        </Section>
+        </label>
 
-        <Section title="Details">
-          <div className="flex flex-col gap-3">
-            <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} />
-            <Input
-              label="Description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              multiline
+        <span
+          className="mb-4 inline-flex rounded-full px-2.5 py-1 text-[12px] font-semibold"
+          style={{ backgroundColor: badge.badgeBg, color: badge.badgeText }}
+        >
+          {badge.label}
+        </span>
+
+        <DetailSection className="relative mb-4 p-4">
+          <button
+            type="button"
+            aria-label="Edit category details"
+            onClick={() => setEditOpen(true)}
+            className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-gray-100"
+          >
+            ✎
+          </button>
+          <p className="mb-4 pr-10 text-[20px] font-extrabold leading-tight tracking-tighter text-ink">
+            {category.name}
+          </p>
+          <div className="mb-4 flex gap-3">
+            <InfoStat
+              label="Products"
+              value={products.length === 1 ? '1 product' : `${products.length} products`}
             />
-            <label className="flex items-center gap-2 text-sm font-semibold">
-              <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />
-              Active
-            </label>
-            <Button label="Save details" loading={saving} onClick={() => void saveInfo()} />
+            <InfoStat label="Status" value={category.is_active ? 'Active' : 'Unlisted'} />
           </div>
-        </Section>
-
-        <Section title="Subcategories">
-          {children.length === 0 ? (
-            <p className="mb-3 text-sm text-gray-500">No subcategories yet.</p>
+          <p className="mb-2 text-[13px] font-bold text-ink">About</p>
+          {category.description?.trim() ? (
+            <p className="text-[15px] leading-6 text-gray-600">{category.description}</p>
           ) : (
-            <ul className="mb-3 flex flex-col gap-2">
-              {children.map((child) => (
-                <li key={child.id}>
+            <p className="text-[15px] text-gray-400">No description</p>
+          )}
+        </DetailSection>
+
+        {category.parent_id ? (
+          <p className="mb-4 text-[13px] text-gray-500">
+            {getCategoryBreadcrumb(category.id, categories)}
+          </p>
+        ) : null}
+
+        <section className="-mx-5 mb-6">
+          <div className="flex items-center border-y border-gray-100 bg-gray-50">
+            <button
+              type="button"
+              onClick={() => setSubsOpen((value) => !value)}
+              className="flex flex-1 items-center justify-between px-5 py-3.5 text-left"
+            >
+              <span className="text-[15px] font-bold text-ink">Subcategories · {children.length}</span>
+              <span className="text-ink">{subsOpen ? '▾' : '▸'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setChildModalOpen(true)}
+              className="border-l border-gray-100 px-4 py-3.5 text-[12px] font-bold text-ink"
+            >
+              Add
+            </button>
+          </div>
+          {subsOpen ? (
+            <div className="px-5">
+              {children.length === 0 ? (
+                <p className="py-3 text-sm text-gray-500">No subcategories yet.</p>
+              ) : (
+                children.map((child) => (
                   <Link
+                    key={child.id}
                     href={`/products/categories/${child.id}`}
-                    className="block rounded-xl border border-gray-200 px-3 py-3 font-semibold text-ink"
+                    className="block border-b border-gray-200 py-3.5 font-semibold text-ink"
                   >
                     {child.name}
                   </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-          <Button label="Add subcategory" variant="outline" onClick={() => setChildModalOpen(true)} />
-        </Section>
+                ))
+              )}
+            </div>
+          ) : null}
+        </section>
 
-        <Section title="Products">
-          {products.length === 0 ? (
-            <p className="mb-3 text-sm text-gray-500">No products assigned.</p>
-          ) : (
-            <ul className="mb-3 flex flex-col gap-2">
-              {products.map((product) => (
-                <li
-                  key={product.id}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 px-3 py-3"
-                >
-                  <Link href={`/products/${product.id}`} className="min-w-0 font-semibold text-ink">
-                    {product.name}
-                  </Link>
-                  <button
-                    type="button"
-                    className="text-[12px] font-bold text-[#E11D48]"
-                    onClick={() => void removeProduct(product.id)}
-                  >
-                    Remove
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-          <Button label="Assign products" variant="outline" onClick={openAssign} />
-        </Section>
+        <section className="-mx-5 mb-6">
+          <div className="flex items-center border-y border-gray-100 bg-gray-50">
+            <button
+              type="button"
+              onClick={() => setProductsOpen((value) => !value)}
+              className="flex flex-1 items-center justify-between px-5 py-3.5 text-left"
+            >
+              <span className="text-[15px] font-bold text-ink">Products · {products.length}</span>
+              <span className="text-ink">{productsOpen ? '▾' : '▸'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={openAssign}
+              className="border-l border-gray-100 px-4 py-3.5 text-[12px] font-bold text-ink"
+            >
+              Add / remove
+            </button>
+          </div>
+          {productsOpen ? (
+            <div className="px-5">
+              {products.length === 0 ? (
+                <p className="py-3 text-sm text-gray-500">No products assigned.</p>
+              ) : (
+                products.map((product) => <ProductListRow key={product.id} product={product} />)
+              )}
+            </div>
+          ) : null}
+        </section>
       </div>
 
       {store ? (
@@ -310,6 +350,27 @@ export default function CategoryDetailPage() {
           }}
         />
       ) : null}
+
+      <Modal
+        open={editOpen}
+        title="Edit category"
+        onClose={() => setEditOpen(false)}
+        footer={<Button label="Save details" loading={saving} onClick={() => void saveInfo()} />}
+      >
+        <div className="flex flex-col gap-3">
+          <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} />
+          <Input
+            label="Description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            multiline
+          />
+          <label className="flex items-center gap-2 text-sm font-semibold">
+            <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />
+            Active
+          </label>
+        </div>
+      </Modal>
 
       <Modal
         open={assignOpen}
@@ -342,5 +403,14 @@ export default function CategoryDetailPage() {
         </div>
       </Modal>
     </main>
+  )
+}
+
+function InfoStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0 flex-1 rounded-xl bg-gray-50 px-2.5 py-2">
+      <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">{label}</p>
+      <p className="truncate text-[13px] font-semibold text-ink">{value}</p>
+    </div>
   )
 }

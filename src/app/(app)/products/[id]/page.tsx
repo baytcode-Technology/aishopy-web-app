@@ -1,6 +1,8 @@
 'use client'
 
-import { ProductStatusBadge } from '@/components/catalog/ProductStatusBadge'
+import { DetailHeader } from '@/components/catalog/DetailHeader'
+import { DetailSection } from '@/components/catalog/DetailSection'
+import { ProductStatusPicker } from '@/components/catalog/ProductStatusPicker'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
@@ -15,27 +17,14 @@ import {
 import { getErrorMessage } from '@/core/lib/api-error'
 import { formatMoney } from '@/core/lib/format-money'
 import { parseOptionalPrice } from '@/core/lib/parse-optional-price'
-import {
-  getProductStatus,
-  PRODUCT_STATUS_OPTIONS,
-  PRODUCT_STATUS_THEME,
-} from '@/core/lib/product-status'
+import { getProductStockDisplayValue } from '@/core/lib/product-inventory'
+import { getProductStatus } from '@/core/lib/product-status'
 import type { Category } from '@/core/types/category'
 import type { Product, ProductStatus, ProductVariant } from '@/core/types/product'
 import { uploadProductImages } from '@/platform/upload-images'
 import { useStore } from '@/providers/store-provider'
-import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="rounded-2xl border border-gray-200 bg-surface p-4">
-      <h2 className="mb-3 text-[11px] font-bold uppercase tracking-wide text-gray-500">{title}</h2>
-      {children}
-    </section>
-  )
-}
 
 export default function ProductDetailPage() {
   const params = useParams<{ id: string }>()
@@ -48,16 +37,13 @@ export default function ProductDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
 
   const [name, setName] = useState('')
   const [basePrice, setBasePrice] = useState('')
   const [compareAtPrice, setCompareAtPrice] = useState('')
   const [sku, setSku] = useState('')
   const [description, setDescription] = useState('')
-  const [stockQty, setStockQty] = useState('')
-  const [trackInventory, setTrackInventory] = useState(false)
-  const [markAsSold, setMarkAsSold] = useState(false)
-  const [markAsNonInventory, setMarkAsNonInventory] = useState(false)
 
   const [variantModalOpen, setVariantModalOpen] = useState(false)
   const [editingVariant, setEditingVariant] = useState<ProductVariant | null>(null)
@@ -97,10 +83,6 @@ export default function ProductDetailPage() {
     setCompareAtPrice(product.compare_at_price != null ? String(product.compare_at_price) : '')
     setSku(product.sku ?? '')
     setDescription(product.description ?? '')
-    setStockQty(String(product.stock_qty ?? 0))
-    setTrackInventory(product.track_inventory)
-    setMarkAsSold(product.mark_as_sold ?? false)
-    setMarkAsNonInventory(product.mark_as_non_inventory ?? false)
   }, [product])
 
   const flash = (message: string) => {
@@ -144,6 +126,7 @@ export default function ProductDetailPage() {
       sku: sku.trim() || null,
       description: description.trim() || null,
     })
+    setEditOpen(false)
   }
 
   const onStatusChange = async (next: ProductStatus) => {
@@ -155,17 +138,10 @@ export default function ProductDetailPage() {
     await persist({ category_id: value ? Number(value) : null })
   }
 
-  const onSaveInventory = async () => {
-    const qty = Number(stockQty)
-    if (!Number.isFinite(qty) || qty < 0) {
-      setError('Stock must be a valid number')
-      return
-    }
+  const persistInventoryFlags = async (sold: boolean, nonInventory: boolean) => {
     await persist({
-      track_inventory: trackInventory,
-      mark_as_sold: markAsSold,
-      mark_as_non_inventory: markAsNonInventory,
-      stock_qty: qty,
+      mark_as_sold: sold,
+      mark_as_non_inventory: nonInventory,
     })
   }
 
@@ -275,7 +251,7 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <main className="px-5 py-10">
+      <main className="bg-gray-100 px-5 py-10">
         <p className="text-sm font-semibold text-gray-500">Loading product…</p>
       </main>
     )
@@ -283,42 +259,43 @@ export default function ProductDetailPage() {
 
   if (!product) {
     return (
-      <main className="px-5 py-10">
+      <main className="bg-gray-100 px-5 py-10">
         <p className="text-sm font-semibold text-gray-600">{error ?? 'Product not found'}</p>
-        <Link href="/products" className="mt-4 inline-block text-sm font-semibold text-brand-green">
-          Back to products
-        </Link>
       </main>
     )
   }
 
   const currency = store?.currency
+  const symbol = currency === 'INR' ? '₹' : '$'
 
   return (
-    <main className="mx-auto w-full max-w-3xl px-5 py-6">
-      <Link href="/products" className="text-[13px] font-semibold text-gray-500">
-        ← Products
-      </Link>
-      <div className="mt-3 mb-5 flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{product.name}</h1>
-          <div className="mt-2">
-            <ProductStatusBadge product={product} />
-          </div>
-        </div>
-      </div>
+    <main className="min-h-full bg-gray-100 pb-10">
+      <DetailHeader
+        title={product.name}
+        backHref="/products"
+        right={
+          <button
+            type="button"
+            aria-label="Edit product"
+            onClick={() => setEditOpen(true)}
+            className="flex h-9 w-9 items-center justify-center rounded-full text-ink"
+          >
+            ✎
+          </button>
+        }
+      />
 
-      {notice ? <p className="mb-3 text-sm font-semibold text-brand-green">{notice}</p> : null}
-      {error ? <p className="mb-3 text-sm text-[#E11D48]">{error}</p> : null}
+      <div className="flex flex-col gap-3 px-5 pt-4">
+        {notice ? <p className="text-sm font-semibold text-brand-green">{notice}</p> : null}
+        {error ? <p className="text-sm text-[#E11D48]">{error}</p> : null}
 
-      <div className="flex flex-col gap-3">
-        <Section title="Media">
-          <div className="flex flex-wrap gap-3">
+        <DetailSection className="p-3">
+          <div className="flex gap-2 overflow-x-auto pb-1">
             {product.images.map((url) => (
-              <div key={url} className="w-24">
+              <div key={url} className="w-[88px] shrink-0">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={url} alt="" className="h-24 w-24 rounded-xl object-cover" />
-                <div className="mt-1 flex flex-col gap-1">
+                <img src={url} alt="" className="h-[88px] w-[88px] rounded-xl object-cover" />
+                <div className="mt-1 flex flex-col gap-0.5">
                   <button
                     type="button"
                     className="text-[11px] font-bold text-ink"
@@ -336,42 +313,30 @@ export default function ProductDetailPage() {
                 </div>
               </div>
             ))}
+            <label className="flex h-[88px] w-[88px] shrink-0 cursor-pointer items-center justify-center rounded-xl border border-dashed border-gray-300 text-[11px] font-bold text-gray-500">
+              +
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={(e) => void onUploadImages(e.target.files)}
+              />
+            </label>
           </div>
-          <label className="mt-3 block text-[13px] font-semibold text-gray-600">
-            Upload images
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              className="mt-2 block text-[13px]"
-              onChange={(e) => void onUploadImages(e.target.files)}
-            />
-          </label>
-        </Section>
+        </DetailSection>
 
-        <Section title="Status">
-          <div className="flex flex-wrap gap-2">
-            {PRODUCT_STATUS_OPTIONS.map((option) => (
-              <button
-                key={option}
-                type="button"
-                disabled={saving}
-                onClick={() => void onStatusChange(option)}
-                className={`rounded-full px-3 py-1.5 text-[13px] font-bold ${
-                  getProductStatus(product) === option ? 'ring-2 ring-ink' : ''
-                }`}
-                style={{
-                  backgroundColor: PRODUCT_STATUS_THEME[option].badgeBg,
-                  color: PRODUCT_STATUS_THEME[option].badgeText,
-                }}
-              >
-                {PRODUCT_STATUS_THEME[option].label}
-              </button>
-            ))}
-          </div>
-        </Section>
+        <DetailSection className="p-3">
+          <ProductStatusPicker
+            value={getProductStatus(product)}
+            onChange={(next) => void onStatusChange(next)}
+            disabled={saving}
+            compact
+          />
+        </DetailSection>
 
-        <Section title="Category">
+        <DetailSection className="p-3.5">
+          <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-gray-500">Category</p>
           <select
             className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-[15px] font-medium outline-none focus:border-ink"
             value={product.category_id ?? ''}
@@ -384,119 +349,157 @@ export default function ProductDetailPage() {
               </option>
             ))}
           </select>
-        </Section>
+        </DetailSection>
 
-        <Section title="Product details">
-          <div className="flex flex-col gap-3">
-            <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} />
-            <Input
-              label="Base price"
-              value={basePrice}
-              onChange={(e) => setBasePrice(e.target.value)}
-              inputMode="decimal"
-            />
-            <Input
-              label="Compare-at price"
-              value={compareAtPrice}
-              onChange={(e) => setCompareAtPrice(e.target.value)}
-              inputMode="decimal"
-            />
-            <Input label="SKU" value={sku} onChange={(e) => setSku(e.target.value)} />
-            <Input
-              label="Description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              multiline
-            />
-            <Button label="Save details" loading={saving} onClick={() => void onSaveInfo()} />
+        <DetailSection className="relative p-3.5">
+          <button
+            type="button"
+            aria-label="Edit product details"
+            onClick={() => setEditOpen(true)}
+            className="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full border border-gray-300 bg-gray-100 text-sm"
+          >
+            ✎
+          </button>
+          <p className="mb-1 text-[11px] font-bold uppercase tracking-wide text-gray-500">
+            Product details
+          </p>
+          <p className="mb-1 pr-9 text-[17px] font-extrabold leading-tight tracking-tight text-ink">
+            {product.name}
+          </p>
+          <p className="mb-2.5 text-[15px] font-semibold text-ink">
+            {formatMoney(product.base_price, currency)}
+            {product.compare_at_price != null ? (
+              <span className="ml-2 text-[13px] font-medium text-gray-400 line-through">
+                {formatMoney(product.compare_at_price, currency)}
+              </span>
+            ) : null}
+          </p>
+          <div className="mb-2.5 flex gap-2">
+            <InfoStat label="Stock" value={getProductStockDisplayValue(product)} />
+            <InfoStat label="SKU" value={product.sku ?? '—'} />
+            <InfoStat label="Variants" value={String(variants.length)} />
           </div>
-        </Section>
+          {product.description ? (
+            <p className="text-[13px] leading-5 text-gray-600">{product.description}</p>
+          ) : (
+            <p className="text-[13px] text-gray-400">No description</p>
+          )}
+        </DetailSection>
 
         {variants.length === 0 ? (
-          <Section title="Inventory">
-            <label className="mb-2 flex items-center gap-2 text-sm font-semibold">
+          <DetailSection className="p-3.5">
+            <p className="mb-2.5 text-[13px] font-bold text-ink">Inventory options</p>
+            <label className="mb-2 flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5">
+              <span>
+                <span className="block text-[13px] font-semibold text-ink">Mark as sold</span>
+                <span className="mt-0.5 block text-[11px] leading-4 text-gray-500">
+                  Shows as sold with 0 stock. Offline orders still allowed.
+                </span>
+              </span>
               <input
                 type="checkbox"
-                checked={trackInventory}
-                onChange={(e) => setTrackInventory(e.target.checked)}
-              />
-              Track inventory
-            </label>
-            <label className="mb-2 flex items-center gap-2 text-sm font-semibold">
-              <input
-                type="checkbox"
-                checked={markAsSold}
+                className="h-5 w-5"
+                checked={product.mark_as_sold ?? false}
                 onChange={(e) => {
-                  setMarkAsSold(e.target.checked)
-                  if (e.target.checked) setMarkAsNonInventory(false)
+                  const sold = e.target.checked
+                  void persistInventoryFlags(sold, sold ? false : (product.mark_as_non_inventory ?? false))
                 }}
               />
-              Mark as sold
             </label>
-            <label className="mb-3 flex items-center gap-2 text-sm font-semibold">
+            <label className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5">
+              <span>
+                <span className="block text-[13px] font-semibold text-ink">Mark as non-inventory</span>
+                <span className="mt-0.5 block text-[11px] leading-4 text-gray-500">
+                  Unlimited orders. Stock is not updated on checkout.
+                </span>
+              </span>
               <input
                 type="checkbox"
-                checked={markAsNonInventory}
+                className="h-5 w-5"
+                checked={product.mark_as_non_inventory ?? false}
                 onChange={(e) => {
-                  setMarkAsNonInventory(e.target.checked)
-                  if (e.target.checked) setMarkAsSold(false)
+                  const nonInventory = e.target.checked
+                  void persistInventoryFlags(nonInventory ? false : (product.mark_as_sold ?? false), nonInventory)
                 }}
               />
-              Non-inventory item
             </label>
-            <Input
-              label="Stock quantity"
-              value={stockQty}
-              onChange={(e) => setStockQty(e.target.value)}
-              inputMode="numeric"
-            />
-            <div className="mt-3">
-              <Button label="Save inventory" loading={saving} onClick={() => void onSaveInventory()} />
-            </div>
-          </Section>
+          </DetailSection>
         ) : null}
 
-        <Section title="Variants">
+        <DetailSection className="p-3.5">
+          <p className="mb-2 text-[13px] font-bold text-ink">
+            {variants.length > 0 ? `Variants · ${variants.length}` : 'Variants'}
+          </p>
           {variants.length === 0 ? (
-            <p className="mb-3 text-sm text-gray-500">No variants yet. Add one if this product has options.</p>
+            <p className="mb-3 text-[13px] text-gray-500">No variants — single SKU product.</p>
           ) : (
             <ul className="mb-3 flex flex-col gap-2">
               {variants.map((variant) => (
-                <li
-                  key={variant.id}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 px-3 py-3"
-                >
-                  <div className="min-w-0">
-                    <p className="font-semibold text-ink">{variant.name}</p>
-                    <p className="text-sm text-gray-500">
-                      {formatMoney((product.base_price ?? 0) + (variant.price_delta ?? 0), currency)} ·
-                      stock {variant.stock_qty}
-                      {variant.sku ? ` · ${variant.sku}` : ''}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      className="text-[12px] font-bold text-ink"
-                      onClick={() => openEditVariant(variant)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      className="text-[12px] font-bold text-[#E11D48]"
-                      onClick={() => void removeVariant(variant.id)}
-                    >
-                      Delete
-                    </button>
+                <li key={variant.id} className="rounded-xl border border-gray-200 px-3 py-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-ink">{variant.name}</p>
+                      <p className="text-sm text-gray-500">
+                        {symbol}
+                        {((product.base_price ?? 0) + (variant.price_delta ?? 0)).toFixed(2)} · stock{' '}
+                        {variant.stock_qty}
+                        {variant.sku ? ` · ${variant.sku}` : ''}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        className="text-[12px] font-bold text-ink"
+                        onClick={() => openEditVariant(variant)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        className="text-[12px] font-bold text-[#E11D48]"
+                        onClick={() => void removeVariant(variant.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </li>
               ))}
             </ul>
           )}
           <Button label="Add variant" variant="outline" onClick={openNewVariant} />
-        </Section>
+        </DetailSection>
       </div>
+
+      <Modal
+        open={editOpen}
+        title="Edit product"
+        onClose={() => setEditOpen(false)}
+        footer={<Button label="Save details" loading={saving} onClick={() => void onSaveInfo()} />}
+      >
+        <div className="flex flex-col gap-3">
+          <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} />
+          <Input
+            label="Base price"
+            value={basePrice}
+            onChange={(e) => setBasePrice(e.target.value)}
+            inputMode="decimal"
+          />
+          <Input
+            label="Compare-at price"
+            value={compareAtPrice}
+            onChange={(e) => setCompareAtPrice(e.target.value)}
+            inputMode="decimal"
+          />
+          <Input label="SKU" value={sku} onChange={(e) => setSku(e.target.value)} />
+          <Input
+            label="Description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            multiline
+          />
+        </div>
+      </Modal>
 
       <Modal
         open={variantModalOpen}
@@ -530,5 +533,14 @@ export default function ProductDetailPage() {
         </div>
       </Modal>
     </main>
+  )
+}
+
+function InfoStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0 flex-1 rounded-xl bg-gray-50 px-2.5 py-2">
+      <p className="text-[10px] font-bold uppercase tracking-wide text-gray-400">{label}</p>
+      <p className="truncate text-[13px] font-semibold text-ink">{value}</p>
+    </div>
   )
 }

@@ -1,12 +1,12 @@
 'use client'
 
+import { ProductStatusPicker } from '@/components/catalog/ProductStatusPicker'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
 import { createProduct } from '@/core/api/products'
 import { getErrorMessage } from '@/core/lib/api-error'
 import { parseOptionalPrice } from '@/core/lib/parse-optional-price'
-import { PRODUCT_STATUS_OPTIONS, PRODUCT_STATUS_THEME } from '@/core/lib/product-status'
 import type { Category } from '@/core/types/category'
 import type { ProductStatus } from '@/core/types/product'
 import { uploadProductImages } from '@/platform/upload-images'
@@ -34,7 +34,7 @@ export function CreateProductModal({
   const [compareAtPrice, setCompareAtPrice] = useState('')
   const [stockQty, setStockQty] = useState('0')
   const [sku, setSku] = useState('')
-  const [categoryId, setCategoryId] = useState<string>(
+  const [categoryId, setCategoryId] = useState(
     initialCategoryId != null ? String(initialCategoryId) : '',
   )
   const [status, setStatus] = useState<ProductStatus>('active')
@@ -120,26 +120,19 @@ export function CreateProductModal({
       footer={<Button label="Create product" loading={loading} onClick={() => void onSubmit()} />}
     >
       <form className="flex flex-col gap-4" onSubmit={onSubmit}>
-        <Input label="Name *" value={name} onChange={(e) => setName(e.target.value)} />
-        <Input
-          label="Base price *"
-          value={basePrice}
-          onChange={(e) => setBasePrice(e.target.value)}
-          inputMode="decimal"
-        />
-        <Input
-          label="Compare-at price"
-          value={compareAtPrice}
-          onChange={(e) => setCompareAtPrice(e.target.value)}
-          inputMode="decimal"
-        />
-        <Input
-          label="Stock"
-          value={stockQty}
-          onChange={(e) => setStockQty(e.target.value)}
-          inputMode="numeric"
-        />
-        <Input label="SKU" value={sku} onChange={(e) => setSku(e.target.value)} />
+        <label className="flex w-full flex-col gap-2">
+          <span className="text-[13px] font-bold tracking-wide text-gray-600">Images</span>
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
+            className="text-[13px] text-gray-600"
+          />
+          {files.length > 0 ? (
+            <p className="text-[12px] text-gray-500">{files.length} file(s) selected</p>
+          ) : null}
+        </label>
         <label className="flex w-full flex-col gap-2">
           <span className="text-[13px] font-bold tracking-wide text-gray-600">Category</span>
           <select
@@ -155,46 +148,33 @@ export function CreateProductModal({
             ))}
           </select>
         </label>
-        <fieldset className="flex flex-col gap-2">
-          <legend className="text-[13px] font-bold tracking-wide text-gray-600">Status</legend>
-          <div className="flex flex-wrap gap-2">
-            {PRODUCT_STATUS_OPTIONS.map((option) => (
-              <button
-                key={option}
-                type="button"
-                onClick={() => setStatus(option)}
-                className={`rounded-full px-3 py-1.5 text-[13px] font-bold ${
-                  status === option ? 'ring-2 ring-ink' : ''
-                }`}
-                style={{
-                  backgroundColor: PRODUCT_STATUS_THEME[option].badgeBg,
-                  color: PRODUCT_STATUS_THEME[option].badgeText,
-                }}
-              >
-                {PRODUCT_STATUS_THEME[option].label}
-              </button>
-            ))}
-          </div>
-        </fieldset>
+        <ProductStatusPicker value={status} onChange={setStatus} />
+        <Input label="Product name *" value={name} onChange={(e) => setName(e.target.value)} />
+        <Input
+          label="Base price *"
+          value={basePrice}
+          onChange={(e) => setBasePrice(e.target.value)}
+          inputMode="decimal"
+        />
+        <Input
+          label="Compare at price"
+          value={compareAtPrice}
+          onChange={(e) => setCompareAtPrice(e.target.value)}
+          inputMode="decimal"
+        />
+        <Input
+          label="Stock quantity"
+          value={stockQty}
+          onChange={(e) => setStockQty(e.target.value)}
+          inputMode="numeric"
+        />
+        <Input label="SKU" value={sku} onChange={(e) => setSku(e.target.value)} />
         <Input
           label="Description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           multiline
         />
-        <label className="flex w-full flex-col gap-2">
-          <span className="text-[13px] font-bold tracking-wide text-gray-600">Images</span>
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
-            className="text-[13px] text-gray-600"
-          />
-          {files.length > 0 ? (
-            <p className="text-[12px] text-gray-500">{files.length} file(s) selected</p>
-          ) : null}
-        </label>
         {error ? <p className="text-sm text-[#E11D48]">{error}</p> : null}
       </form>
     </Modal>

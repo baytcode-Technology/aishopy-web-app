@@ -1,7 +1,11 @@
 'use client'
 
+import { CatalogHeader } from '@/components/catalog/CatalogHeader'
+import { CategoryTreeRow } from '@/components/catalog/CategoryTreeRow'
 import { CreateCategoryModal } from '@/components/catalog/CreateCategoryModal'
+import { Fab } from '@/components/catalog/Fab'
 import { PillTabs } from '@/components/catalog/PillTabs'
+import { SearchBar } from '@/components/catalog/SearchBar'
 import { fetchCategories } from '@/core/api/categories'
 import { fetchProducts } from '@/core/api/products'
 import { getErrorMessage } from '@/core/lib/api-error'
@@ -14,7 +18,6 @@ import {
 } from '@/core/lib/category-tree'
 import type { Category } from '@/core/types/category'
 import { useStore } from '@/providers/store-provider'
-import Link from 'next/link'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 type StatusFilter = 'all' | 'active' | 'unlisted'
@@ -110,94 +113,67 @@ export default function CategoriesPage() {
     })
   }
 
-  return (
-    <main className="mx-auto w-full max-w-3xl px-5 py-6">
-      <Link href="/products" className="text-[13px] font-semibold text-gray-500">
-        ← Products
-      </Link>
-      <div className="mb-5 mt-3 flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Categories</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            {rootCount} top-level · {categories.length} total
-          </p>
-        </div>
-        {store ? (
-          <button
-            type="button"
-            onClick={() => setModalOpen(true)}
-            className="hidden rounded-full bg-brand-primary px-4 py-2.5 text-[12px] font-bold text-brand-on-primary sm:inline-flex"
-          >
-            New category
-          </button>
-        ) : null}
+  const listHeader = (
+    <div className="pb-2">
+      <SearchBar value={search} onChange={setSearch} placeholder="Search categories…" />
+      <div className="px-5">
+        <PillTabs tabs={STATUS_TABS} value={statusFilter} onChange={setStatusFilter} />
       </div>
+    </div>
+  )
 
-      <input
-        type="search"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        placeholder="Search categories…"
-        className="mb-3 w-full rounded-2xl border border-gray-200 bg-surface px-4 py-3 text-[15px] outline-none focus:border-ink"
+  return (
+    <main className="min-h-full bg-gray-100">
+      <CatalogHeader
+        title="Categories"
+        subtitle={`${rootCount} top-level · ${categories.length} total`}
+        backHref="/products"
       />
-      <PillTabs tabs={STATUS_TABS} value={statusFilter} onChange={setStatusFilter} />
 
-      {error ? <p className="mt-4 text-sm text-[#E11D48]">{error}</p> : null}
+      {error ? <p className="px-5 text-sm text-[#E11D48]">{error}</p> : null}
 
       {loading ? (
-        <p className="mt-8 text-sm font-semibold text-gray-500">Loading categories…</p>
+        <div className="pt-2">
+          {listHeader}
+          <p className="px-5 pt-6 text-sm font-semibold text-gray-500">Loading categories…</p>
+        </div>
       ) : !store ? (
-        <p className="mt-8 text-sm text-gray-500">No store selected.</p>
+        <p className="px-5 pt-8 text-sm text-gray-500">No store selected.</p>
       ) : categories.length === 0 ? (
-        <div className="mt-10 rounded-3xl border border-dashed border-gray-300 bg-surface px-6 py-12 text-center">
-          <p className="text-base font-semibold text-ink">No categories yet</p>
-          <p className="mt-2 text-sm text-gray-500">Group products with a category tree.</p>
+        <div>
+          {listHeader}
+          <div className="px-7 pb-28 pt-10 text-center">
+            <p className="text-base font-semibold text-ink">No categories yet</p>
+            <p className="mt-2 text-sm text-gray-500">Tap + to group products with a category tree.</p>
+          </div>
         </div>
       ) : flatItems.length === 0 ? (
-        <p className="mt-8 text-sm text-gray-500">No categories match this filter.</p>
+        <div>
+          {listHeader}
+          <p className="px-5 pt-8 text-sm text-gray-500">No categories match this filter.</p>
+        </div>
       ) : (
-        <ul className="mt-4 flex flex-col gap-2">
-          {flatItems.map((item) => (
-            <li key={item.category.id} style={{ paddingLeft: item.depth * 16 }}>
-              <div className="flex items-center gap-2 rounded-2xl border border-gray-200 bg-surface px-3 py-3">
-                {item.hasChildren ? (
-                  <button
-                    type="button"
-                    onClick={() => toggleExpand(item.category.id)}
-                    className="h-7 w-7 shrink-0 rounded-lg bg-gray-100 text-sm font-bold text-ink"
-                    aria-label={expandedIds.has(item.category.id) ? 'Collapse' : 'Expand'}
-                  >
-                    {expandedIds.has(item.category.id) ? '−' : '+'}
-                  </button>
-                ) : (
-                  <span className="h-7 w-7 shrink-0" />
-                )}
-                <Link href={`/products/categories/${item.category.id}`} className="min-w-0 flex-1">
-                  <p className="truncate font-semibold text-ink">{item.category.name}</p>
-                  <p className="text-[12px] text-gray-500">
-                    {item.breadcrumb && item.breadcrumb !== item.category.name
-                      ? `${item.breadcrumb} · `
-                      : ''}
-                    {item.category.product_count ?? 0} products
-                    {item.category.is_active ? '' : ' · Unlisted'}
-                  </p>
-                </Link>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <div className="pb-32 pt-1">
+          {listHeader}
+          <ul className="px-5">
+            {flatItems.map((item) => (
+              <li key={item.category.id}>
+                <CategoryTreeRow
+                  category={item.category}
+                  depth={item.depth}
+                  hasChildren={item.hasChildren}
+                  childCount={item.childCount}
+                  expanded={expandedIds.has(item.category.id)}
+                  breadcrumb={item.breadcrumb}
+                  onToggleExpand={() => toggleExpand(item.category.id)}
+                />
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
 
-      {store ? (
-        <button
-          type="button"
-          onClick={() => setModalOpen(true)}
-          className="fixed bottom-24 right-5 z-10 flex h-14 w-14 items-center justify-center rounded-full bg-brand-primary text-2xl font-semibold text-brand-on-primary shadow-lg sm:hidden"
-          aria-label="Create category"
-        >
-          +
-        </button>
-      ) : null}
+      {store ? <Fab onClick={() => setModalOpen(true)} label="Create category" /> : null}
 
       {store ? (
         <CreateCategoryModal

@@ -27,6 +27,12 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
+function isDetailRoute(pathname: string) {
+  if (/^\/products\/categories\/[^/]+$/.test(pathname)) return true
+  if (/^\/products\/[^/]+$/.test(pathname) && pathname !== '/products/categories') return true
+  return false
+}
+
 function AppGate({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading: authLoading } = useAuth()
   const { store, hydrateActiveStore } = useStore()
@@ -99,6 +105,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { signOut } = useAuth()
   const { store, sessionStoreName, clearStore } = useStore()
   const storeName = store?.name ?? sessionStoreName ?? 'AiShopy'
+  const hideTabs = isDetailRoute(pathname)
 
   const handleSignOut = async () => {
     await clearStore()
@@ -109,8 +116,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <RequireAuth>
       <AppGate>
-        <div className="min-h-screen bg-gray-100 md:flex">
-          <aside className="hidden md:flex md:w-64 md:shrink-0 md:flex-col md:border-r md:border-gray-200 md:bg-surface">
+        <div className="min-h-screen bg-gray-100 lg:flex">
+          <aside className="hidden lg:flex lg:w-64 lg:shrink-0 lg:flex-col lg:border-r lg:border-gray-200 lg:bg-surface">
             <div className="px-5 pb-2 pt-6">
               <AppLogo />
               <p className="mt-5 text-[11px] font-bold uppercase tracking-[0.16em] text-gray-400">
@@ -152,50 +159,37 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           </aside>
 
-          <div className="flex min-h-screen flex-1 flex-col pb-24 md:pb-0">
-            <header className="flex items-center justify-between border-b border-gray-200 bg-surface px-5 py-3 md:hidden">
-              <p className="truncate text-[15px] font-semibold text-ink">{storeName}</p>
-              <div className="flex items-center gap-3">
-                <Link href="/select-store" className="text-[12px] font-bold text-ink">
-                  Switch
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => void handleSignOut()}
-                  className="text-[12px] font-bold uppercase tracking-wide text-gray-500"
-                >
-                  Sign out
-                </button>
-              </div>
-            </header>
+          <div className={`flex min-h-screen flex-1 flex-col ${hideTabs ? '' : 'pb-24 lg:pb-0'}`}>
             <div className="flex-1">{children}</div>
           </div>
 
-          <nav className="fixed inset-x-0 bottom-0 z-20 px-5 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 md:hidden">
-            <div className="flex items-center justify-between rounded-[26px] border border-gray-200 bg-surface px-2 py-2 shadow-lg">
-              {NAV.map(({ href, label, Icon }) => {
-                const active = isActive(pathname, href)
-                return (
-                  <Link
-                    key={href}
-                    href={href}
-                    className={`flex min-w-[56px] flex-1 flex-col items-center rounded-[18px] px-2 py-1.5 ${
-                      active ? 'bg-gray-100' : ''
-                    }`}
-                  >
-                    <Icon className={`h-5 w-5 ${active ? 'text-ink' : 'text-gray-400'}`} />
-                    <span
-                      className={`mt-1 text-[10px] font-bold tracking-wide ${
-                        active ? 'text-ink' : 'text-gray-400'
+          {hideTabs ? null : (
+            <nav className="fixed inset-x-0 bottom-0 z-20 px-5 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 lg:hidden">
+              <div className="flex items-center justify-between rounded-[26px] border border-gray-200 bg-surface px-2 py-2 shadow-lg">
+                {NAV.map(({ href, label, Icon }) => {
+                  const active = isActive(pathname, href)
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      className={`flex min-w-[56px] flex-1 flex-col items-center rounded-[18px] px-2 py-1.5 ${
+                        active ? 'bg-gray-100' : ''
                       }`}
                     >
-                      {label}
-                    </span>
-                  </Link>
-                )
-              })}
-            </div>
-          </nav>
+                      <Icon className={`h-5 w-5 ${active ? 'text-ink' : 'text-gray-400'}`} />
+                      <span
+                        className={`mt-1 text-[10px] font-bold tracking-wide ${
+                          active ? 'text-ink' : 'text-gray-400'
+                        }`}
+                      >
+                        {label}
+                      </span>
+                    </Link>
+                  )
+                })}
+              </div>
+            </nav>
+          )}
         </div>
       </AppGate>
     </RequireAuth>
