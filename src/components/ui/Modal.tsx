@@ -7,13 +7,22 @@ type Props = {
   onClose: () => void
   children: ReactNode
   footer?: ReactNode
+  zClass?: string
 }
 
-export function Modal({ open, title, subtitle, onClose, children, footer }: Props) {
+export function Modal({
+  open,
+  title,
+  subtitle,
+  onClose,
+  children,
+  footer,
+  zClass = 'z-40',
+}: Props) {
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-ink-overlay p-0 lg:items-center lg:p-6">
+    <div className={`fixed inset-0 ${zClass} flex items-end justify-center bg-ink-overlay p-0 lg:items-center lg:p-6`}>
       <button
         type="button"
         aria-label="Close dialog"

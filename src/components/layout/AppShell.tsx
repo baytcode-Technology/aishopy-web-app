@@ -10,7 +10,9 @@ import {
 } from '@/components/layout/NavIcons'
 import { fetchSupportAdminStatus } from '@/core/api/support'
 import { getErrorMessage } from '@/core/lib/api-error'
+import { UnreadCountBadge } from '@/components/ui/UnreadCountBadge'
 import { useAuth } from '@/providers/auth-provider'
+import { useOrdersUnread } from '@/providers/orders-unread-provider'
 import { useStore } from '@/providers/store-provider'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
@@ -27,9 +29,23 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
+const SETTINGS_STACK = [
+  '/settings',
+  '/storefront',
+  '/notifications',
+  '/admin-dashboard',
+  '/staff-management',
+  '/account-coming-soon',
+  '/platform-admin',
+]
+
 function isDetailRoute(pathname: string) {
+  if (SETTINGS_STACK.some((route) => pathname === route || pathname.startsWith(`${route}/`))) {
+    return true
+  }
   if (/^\/products\/categories\/[^/]+$/.test(pathname)) return true
   if (/^\/products\/[^/]+$/.test(pathname) && pathname !== '/products/categories') return true
+  if (/^\/orders\/[^/]+$/.test(pathname)) return true
   return false
 }
 
@@ -104,6 +120,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter()
   const { signOut } = useAuth()
   const { store, sessionStoreName, clearStore } = useStore()
+  const { ordersUnreadCount } = useOrdersUnread()
   const storeName = store?.name ?? sessionStoreName ?? 'AiShopy'
   const hideTabs = isDetailRoute(pathname)
 
@@ -136,7 +153,12 @@ export function AppShell({ children }: { children: ReactNode }) {
                       active ? 'bg-gray-100 text-ink' : 'text-gray-500 hover:bg-gray-50 hover:text-ink'
                     }`}
                   >
-                    <Icon className={`h-5 w-5 ${active ? 'text-ink' : 'text-gray-400'}`} />
+                    <span className="relative">
+                      <Icon className={`h-5 w-5 ${active ? 'text-ink' : 'text-gray-400'}`} />
+                      {href === '/orders' ? (
+                        <UnreadCountBadge count={ordersUnreadCount} className="absolute -right-2 -top-1" />
+                      ) : null}
+                    </span>
                     {label}
                   </Link>
                 )
@@ -176,7 +198,12 @@ export function AppShell({ children }: { children: ReactNode }) {
                         active ? 'bg-gray-100' : ''
                       }`}
                     >
-                      <Icon className={`h-5 w-5 ${active ? 'text-ink' : 'text-gray-400'}`} />
+                      <span className="relative">
+                        <Icon className={`h-5 w-5 ${active ? 'text-ink' : 'text-gray-400'}`} />
+                        {href === '/orders' ? (
+                          <UnreadCountBadge count={ordersUnreadCount} className="absolute -right-2 -top-1" />
+                        ) : null}
+                      </span>
                       <span
                         className={`mt-1 text-[10px] font-bold tracking-wide ${
                           active ? 'text-ink' : 'text-gray-400'

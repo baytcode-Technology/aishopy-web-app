@@ -1,6 +1,6 @@
 'use client'
 
-import { fetchMyStores } from '@/core/api/stores'
+import { fetchMyStore, fetchMyStores } from '@/core/api/stores'
 import { normalizeEntityId } from '@/core/lib/normalize-entity-id'
 import { buildSubdomainUrl } from '@/core/lib/storefront'
 import type { Store, StoreAccessRole, StoreListItem } from '@/core/types/store'
@@ -31,6 +31,7 @@ type StoreContextValue = {
   refreshStores: () => Promise<StoreListItem[]>
   switchStore: (storeId: number) => Promise<boolean>
   hydrateActiveStore: () => Promise<boolean>
+  refreshStore: () => Promise<void>
   activateStoreSession: (
     store: Store,
     subdomainUrl: string,
@@ -124,6 +125,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [stores, refreshStores, activateStoreSession],
   )
 
+  const refreshStore = useCallback(async () => {
+    const id = store?.id ?? sessionStoreId
+    if (id == null) return
+    const res = await fetchMyStore(id)
+    const next = normalizeStoreFromApi(res.data.store)
+    if (!next) return
+    const url = subdomainUrl ?? buildSubdomainUrl(next.slug)
+    await activateStoreSession(next, url, role ?? 'owner')
+  }, [activateStoreSession, role, sessionStoreId, store?.id, subdomainUrl])
+
   const hydrateActiveStore = useCallback(async () => {
     setIsLoading(true)
     try {
@@ -161,6 +172,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       refreshStores,
       switchStore,
       hydrateActiveStore,
+      refreshStore,
       activateStoreSession,
       clearStore,
     }),
@@ -175,6 +187,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       refreshStores,
       switchStore,
       hydrateActiveStore,
+      refreshStore,
       activateStoreSession,
       clearStore,
     ],

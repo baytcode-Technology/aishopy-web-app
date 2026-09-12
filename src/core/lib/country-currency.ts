@@ -99,3 +99,31 @@ export const DEFAULT_COUNTRY: CountryValue = {
   name: 'United States',
   cca2: 'US',
 }
+
+/** Match stored country name to a picker code when possible. */
+export function guessCountryCodeFromName(countryName: string): string {
+  const normalized = countryName.trim().toLowerCase()
+  const map: Record<string, string> = {
+    india: 'IN',
+    'united states': 'US',
+    'united kingdom': 'GB',
+    'united arab emirates': 'AE',
+    uae: 'AE',
+    canada: 'CA',
+    australia: 'AU',
+    singapore: 'SG',
+    malaysia: 'MY',
+    germany: 'DE',
+    france: 'FR',
+    japan: 'JP',
+    china: 'CN',
+    pakistan: 'PK',
+    bangladesh: 'BD',
+    'sri lanka': 'LK',
+    nepal: 'NP',
+    'saudi arabia': 'SA',
+  }
+  if (map[normalized]) return map[normalized]
+  const found = COUNTRY_OPTIONS.find((item) => item.name.toLowerCase() === normalized)
+  return found?.cca2 ?? 'US'
+}

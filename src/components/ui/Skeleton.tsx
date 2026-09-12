@@ -85,6 +85,57 @@ export function ProductDetailSkeleton() {
   )
 }
 
+export function OrderRowSkeleton() {
+  return (
+    <div className="mb-4 rounded-[22px] border border-gray-200 bg-surface p-5 shadow-sm">
+      <div className="mb-4 flex justify-between">
+        <Skeleton className="h-4 w-[42%] rounded-md" />
+        <Skeleton className="h-6 w-20 rounded-full" />
+      </div>
+      <Skeleton className="mb-5 h-3 w-[55%] rounded-md" />
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-3 w-24 rounded-md" />
+        <Skeleton className="h-6 w-28 rounded-md" />
+      </div>
+    </div>
+  )
+}
+
+export function OrdersSkeletonList() {
+  return (
+    <div className="pt-2">
+      {[0, 1, 2, 3].map((index) => (
+        <OrderRowSkeleton key={index} />
+      ))}
+    </div>
+  )
+}
+
+export function NotificationSettingsSkeleton() {
+  return (
+    <div className="flex flex-col gap-4">
+      <Skeleton className="h-10 w-full rounded-md" />
+      <div className="w-full rounded-[28px] border border-gray-200 bg-surface px-4 py-5">
+        <Skeleton className="mb-3 h-5 w-16 rounded-md" />
+        {[0, 1, 2].map((index) => (
+          <div key={index} className="flex items-center justify-between gap-3 py-3">
+            <div className="min-w-0 flex-1">
+              <Skeleton className="mb-1.5 h-4 w-24 rounded-md" />
+              <Skeleton className="h-3 w-[70%] rounded-md" />
+            </div>
+            <Skeleton className="h-6 w-11 rounded-full" />
+          </div>
+        ))}
+      </div>
+      <div className="flex w-full flex-col gap-3 rounded-[28px] border border-gray-200 bg-surface px-4 py-5">
+        <Skeleton className="h-5 w-36 rounded-md" />
+        <Skeleton className="h-10 w-full rounded-md" />
+        <Skeleton className="h-20 w-full rounded-xl" />
+      </div>
+    </div>
+  )
+}
+
 export function CategoryDetailSkeleton() {
   return (
     <main className="min-h-full bg-gray-100 pb-28">

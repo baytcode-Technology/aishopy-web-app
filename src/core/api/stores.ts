@@ -48,3 +48,21 @@ export async function fetchStoreStaff(storeId: number): Promise<StoreStaffRespon
     `${endpoints.storesStaff}${storeIdQuery(storeId)}`,
   )
 }
+
+export async function inviteStoreStaff(storeId: number, email: string) {
+  return authenticatedFetch<{
+    success: boolean
+    message: string
+    data: { staff: { id: number; email: string; status: string } }
+  }>(`${endpoints.storesStaff}${storeIdQuery(storeId)}`, {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  })
+}
+
+export async function removeStoreStaff(storeId: number, staffId: number) {
+  return authenticatedFetch<{ success: boolean; message: string }>(
+    `${endpoints.storesStaff}/${staffId}${storeIdQuery(storeId)}`,
+    { method: 'DELETE' },
+  )
+}

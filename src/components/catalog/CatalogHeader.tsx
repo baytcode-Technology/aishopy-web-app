@@ -1,6 +1,7 @@
 'use client'
 
 import { HeaderOverflow } from '@/components/catalog/HeaderOverflow'
+import { SettingsHeaderButton } from '@/components/catalog/SettingsHeaderButton'
 import { AppLogo } from '@/components/brand/AppLogo'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
@@ -11,9 +12,17 @@ type Props = {
   right?: ReactNode
   onBack?: () => void
   backHref?: string
+  showSettings?: boolean
 }
 
-export function CatalogHeader({ title, subtitle, right, onBack, backHref }: Props) {
+export function CatalogHeader({
+  title,
+  subtitle,
+  right,
+  onBack,
+  backHref,
+  showSettings = true,
+}: Props) {
   return (
     <header className="bg-surface px-5 pb-3 pt-1">
       <div className="mb-2 hidden justify-center max-lg:flex">
@@ -46,6 +55,7 @@ export function CatalogHeader({ title, subtitle, right, onBack, backHref }: Prop
           </div>
           <div className="flex shrink-0 items-center gap-2 pt-0.5">
             {right}
+            {showSettings ? <SettingsHeaderButton /> : null}
             <HeaderOverflow />
           </div>
       </div>
