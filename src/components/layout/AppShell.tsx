@@ -147,58 +147,66 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <RequireAuth>
       <AppGate>
-        <div className="min-h-screen bg-gray-100 lg:flex">
-          <aside className="hidden lg:flex lg:w-64 lg:shrink-0 lg:flex-col lg:border-r lg:border-gray-200 lg:bg-surface">
-            <div className="px-5 pb-2 pt-6">
-              <AppLogo />
-              <p className="mt-5 text-[11px] font-bold uppercase tracking-[0.16em] text-gray-400">
-                Store
-              </p>
-              <p className="mt-1 truncate text-[15px] font-semibold text-ink">{storeName}</p>
-            </div>
-            <nav className="mt-4 flex flex-1 flex-col gap-1 px-3">
-              {NAV.map(({ href, label, Icon }) => {
-                const active = isActive(pathname, href)
-                return (
+        <div className="min-h-screen bg-gray-100 lg:flex lg:h-dvh lg:overflow-hidden">
+          <aside className="hidden lg:flex lg:h-full lg:w-64 lg:shrink-0 lg:flex-col lg:border-r lg:border-gray-200 lg:bg-surface">
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+              <div className="flex min-h-full flex-col">
+                <div className="px-5 pb-2 pt-6">
+                  <AppLogo />
+                  <p className="mt-5 text-[11px] font-bold uppercase tracking-[0.16em] text-gray-400">
+                    Store
+                  </p>
+                  <p className="mt-1 truncate text-[15px] font-semibold text-ink">{storeName}</p>
+                </div>
+                <nav className="mt-4 flex flex-1 flex-col gap-1 px-3">
+                  {NAV.map(({ href, label, Icon }) => {
+                    const active = isActive(pathname, href)
+                    return (
+                      <Link
+                        key={href}
+                        href={href}
+                        className={`flex items-center gap-3 rounded-2xl px-3 py-3 text-[14px] font-semibold ${
+                          active ? 'bg-gray-100 text-ink' : 'text-gray-500 hover:bg-gray-50 hover:text-ink'
+                        }`}
+                      >
+                        <span className="relative">
+                          <Icon className={`h-5 w-5 ${active ? 'text-ink' : 'text-gray-400'}`} />
+                          {href === '/orders' ? (
+                            <UnreadCountBadge count={ordersUnreadCount} className="absolute -right-2 -top-1" />
+                          ) : null}
+                          {href === '/inbox' ? (
+                            <UnreadCountBadge count={chatsUnreadCount} className="absolute -right-2 -top-1" />
+                          ) : null}
+                        </span>
+                        {label}
+                      </Link>
+                    )
+                  })}
+                </nav>
+                <div className="mt-auto flex flex-col gap-1 border-t border-gray-200 px-3 py-4">
                   <Link
-                    key={href}
-                    href={href}
-                    className={`flex items-center gap-3 rounded-2xl px-3 py-3 text-[14px] font-semibold ${
-                      active ? 'bg-gray-100 text-ink' : 'text-gray-500 hover:bg-gray-50 hover:text-ink'
-                    }`}
+                    href="/select-store"
+                    className="rounded-2xl px-3 py-2.5 text-[13px] font-semibold text-ink hover:bg-gray-50"
                   >
-                    <span className="relative">
-                      <Icon className={`h-5 w-5 ${active ? 'text-ink' : 'text-gray-400'}`} />
-                      {href === '/orders' ? (
-                        <UnreadCountBadge count={ordersUnreadCount} className="absolute -right-2 -top-1" />
-                      ) : null}
-                      {href === '/inbox' ? (
-                        <UnreadCountBadge count={chatsUnreadCount} className="absolute -right-2 -top-1" />
-                      ) : null}
-                    </span>
-                    {label}
+                    Switch store
                   </Link>
-                )
-              })}
-            </nav>
-            <div className="flex flex-col gap-1 border-t border-gray-200 px-3 py-4">
-              <Link
-                href="/select-store"
-                className="rounded-2xl px-3 py-2.5 text-[13px] font-semibold text-ink hover:bg-gray-50"
-              >
-                Switch store
-              </Link>
-              <button
-                type="button"
-                onClick={() => void handleSignOut()}
-                className="rounded-2xl px-3 py-2.5 text-left text-[13px] font-semibold text-gray-500 hover:bg-gray-50"
-              >
-                Sign out
-              </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleSignOut()}
+                    className="rounded-2xl px-3 py-2.5 text-left text-[13px] font-semibold text-gray-500 hover:bg-gray-50"
+                  >
+                    Sign out
+                  </button>
+                </div>
+              </div>
             </div>
           </aside>
 
-          <div className={`flex min-h-screen flex-1 flex-col ${hideTabs ? '' : 'pb-24 lg:pb-0'}`}>
+          <div
+            className={`flex min-h-screen flex-1 flex-col lg:min-h-0 lg:overflow-y-auto ${
+              hideTabs ? '' : 'pb-24 lg:pb-0'
+            }`}
+          >
             <div className="flex-1">{children}</div>
           </div>
 
