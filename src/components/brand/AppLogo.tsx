@@ -1,3 +1,6 @@
+'use client'
+
+import { useAppTheme } from '@/providers/theme-provider'
 import Image from 'next/image'
 import Link from 'next/link'
 
@@ -7,10 +10,12 @@ type Props = {
 }
 
 export function AppLogo({ variant = 'wordmark', href = '/' }: Props) {
+  const { isDark } = useAppTheme()
   const isWordmark = variant === 'wordmark'
+  const wordmarkSrc = isDark ? '/aishopy_logo_dark.png' : '/aishopy_logo.png'
   const image = (
     <Image
-      src={isWordmark ? '/aishopy_logo.png' : '/app_logo.jpg'}
+      src={isWordmark ? wordmarkSrc : '/app_logo.jpg'}
       alt="AiShopy"
       width={isWordmark ? 138 : 40}
       height={isWordmark ? 18 : 40}

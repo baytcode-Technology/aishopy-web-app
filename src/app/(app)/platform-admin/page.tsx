@@ -77,11 +77,7 @@ export default function PlatformAdminPage() {
         />
 
         <div className="pt-4">
-          <Button
-            label="Sign out"
-            onClick={() => void handleSignOut()}
-            className="border-[#E11D48] bg-[#E11D48] text-white"
-          />
+          <Button label="Sign out" variant="destructive" onClick={() => void handleSignOut()} />
         </div>
       </div>
     </main>

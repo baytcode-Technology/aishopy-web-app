@@ -5,6 +5,7 @@ import { AiThirdPartyConsentModal } from '@/components/store/AiThirdPartyConsent
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { MenuIcon } from '@/components/ui/MenuIcons'
+import { Switch } from '@/components/ui/Switch'
 import { fetchInboxAiSettings, updateInboxAiSettings } from '@/core/api/inbox-ai'
 import { getErrorMessage } from '@/core/lib/api-error'
 import { hasPremiumAccess } from '@/core/lib/subscription'
@@ -165,23 +166,13 @@ export default function ChatBoatPage() {
                     When on, Chat Boat answers customer messages automatically.
                   </p>
                 </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={enabled}
-                  aria-label="Auto-reply enabled"
+                <Switch
+                  value={enabled}
+                  onValueChange={handleToggleEnabled}
                   disabled={!premium || saving}
-                  onClick={() => handleToggleEnabled(!enabled)}
-                  className={`relative h-6 w-11 shrink-0 rounded-full ${
-                    enabled ? 'bg-brand-primary' : 'bg-[#E4E4E7]'
-                  } ${!premium || saving ? 'opacity-45' : ''}`}
-                >
-                  <span
-                    className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow ${
-                      enabled ? 'right-0.5' : 'left-0.5'
-                    }`}
-                  />
-                </button>
+                  aria-label="Auto-reply enabled"
+                  onTrack="primary"
+                />
               </div>
             </div>
 

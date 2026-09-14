@@ -123,11 +123,7 @@ export default function SettingsPage() {
           />
 
           <div className="flex flex-col gap-3 pt-4">
-            <Button
-              label="Sign out"
-              onClick={() => void handleSignOut()}
-              className="border-[#E11D48] bg-[#E11D48] text-white"
-            />
+            <Button label="Sign out" variant="destructive" onClick={() => void handleSignOut()} />
             <DeleteAccountSection />
           </div>
         </div>
@@ -291,11 +287,7 @@ export default function SettingsPage() {
             </div>
 
             <div className="flex flex-col gap-3 pt-2">
-              <Button
-                label="Sign out"
-                onClick={() => void handleSignOut()}
-                className="border-[#E11D48] bg-[#E11D48] text-white"
-              />
+              <Button label="Sign out" variant="destructive" onClick={() => void handleSignOut()} />
               <DeleteAccountSection storeName={store?.name} />
             </div>
           </div>

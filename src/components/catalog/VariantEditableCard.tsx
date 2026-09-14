@@ -144,13 +144,21 @@ export function VariantEditableCard({
                 aria-label={displayActive ? 'Disable variant' : 'Enable variant'}
                 disabled={cardLocked}
                 onClick={() => void toggleActive()}
-                className={`relative h-6 w-10 rounded-full ${displayActive ? 'bg-brand-primary' : 'bg-gray-300'}`}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-surface disabled:opacity-45"
               >
-                <span
-                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${
-                    displayActive ? 'right-0.5' : 'left-0.5'
-                  }`}
-                />
+                <svg
+                  viewBox="0 0 24 24"
+                  className="h-5 w-5"
+                  fill="currentColor"
+                  aria-hidden
+                  style={{ color: displayActive ? '#3EB056' : '#A1A1AA' }}
+                >
+                  {displayActive ? (
+                    <path d="M17 7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h10c2.76 0 5-2.24 5-5s-2.24-5-5-5zm0 8c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z" />
+                  ) : (
+                    <path d="M17 7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h10c2.76 0 5-2.24 5-5s-2.24-5-5-5zM7 15c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z" />
+                  )}
+                </svg>
               </button>
             </div>
             {showSoldOut || showNonInventory ? (
