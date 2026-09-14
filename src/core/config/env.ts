@@ -2,12 +2,15 @@ const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL?.trim() ?? ''
 const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() ?? 'http://localhost:3001'
 const storefrontBaseDomain =
   process.env.NEXT_PUBLIC_STOREFRONT_BASE_DOMAIN?.trim() || 'aishopy.io'
+const storefrontPreviewBaseUrl =
+  process.env.NEXT_PUBLIC_STOREFRONT_PREVIEW_BASE_URL?.trim() || `https://${storefrontBaseDomain}`
 const googleWebClientId = process.env.NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID?.trim() ?? ''
 
 export const env = {
   apiBaseUrl,
   appUrl,
   storefrontBaseDomain,
+  storefrontPreviewBaseUrl,
   googleWebClientId,
 } as const
 

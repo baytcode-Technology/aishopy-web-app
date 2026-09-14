@@ -67,7 +67,7 @@ export default function AdminDashboardPage() {
           value="Connect phone + inbox"
           icon="whatsapp"
           showChevron
-          onPress={() => router.push(comingSoonHref('whatsapp'))}
+          onPress={() => router.push('/connect-whatsapp')}
         />
 
         <LockedMenuRow
@@ -77,7 +77,7 @@ export default function AdminDashboardPage() {
           value="Connect business account"
           icon="instagram"
           showChevron
-          onPress={() => router.push(comingSoonHref('instagram'))}
+          onPress={() => router.push('/instagram-connect')}
         />
 
         <LockedMenuRow

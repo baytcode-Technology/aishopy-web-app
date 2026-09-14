@@ -177,7 +177,7 @@ export default function SettingsPage() {
               value="UI design & customization"
               icon="paint-brush"
               showChevron
-              onPress={() => router.push(comingSoonHref('website'))}
+              onPress={() => router.push('/website-customize')}
             />
             <MenuRow label="Currency" value={store?.currency ?? 'INR'} icon="money" />
             <MenuRow
@@ -185,7 +185,7 @@ export default function SettingsPage() {
               value="COD, cards & more"
               icon="credit-card"
               showChevron
-              onPress={() => router.push(comingSoonHref('payment-methods'))}
+              onPress={() => router.push('/payment-methods')}
             />
             <MenuRow
               label="Notifications"

@@ -1,6 +1,8 @@
 'use client'
 
 import { AuthProvider } from '@/providers/auth-provider'
+import { ChatSocketProvider } from '@/providers/chat-socket-provider'
+import { ChatsUnreadProvider } from '@/providers/chats-unread-provider'
 import { OrdersUnreadProvider } from '@/providers/orders-unread-provider'
 import { StoreProvider } from '@/providers/store-provider'
 import { ThemeProvider } from '@/providers/theme-provider'
@@ -11,7 +13,11 @@ export function AppProviders({ children }: { children: ReactNode }) {
     <ThemeProvider>
       <AuthProvider>
         <StoreProvider>
-          <OrdersUnreadProvider>{children}</OrdersUnreadProvider>
+          <ChatSocketProvider>
+            <ChatsUnreadProvider>
+              <OrdersUnreadProvider>{children}</OrdersUnreadProvider>
+            </ChatsUnreadProvider>
+          </ChatSocketProvider>
         </StoreProvider>
       </AuthProvider>
     </ThemeProvider>

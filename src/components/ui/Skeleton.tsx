@@ -111,6 +111,68 @@ export function OrdersSkeletonList() {
   )
 }
 
+export function PaymentMethodsListSkeleton() {
+  return (
+    <div className="flex flex-col gap-3">
+      {[0, 1, 2].map((index) => (
+        <div
+          key={index}
+          className="flex items-center gap-4 rounded-2xl border border-gray-200 bg-surface px-5 py-4"
+        >
+          <Skeleton className="h-10 w-10 rounded-xl" />
+          <div className="min-w-0 flex-1">
+            <Skeleton className="mb-2 h-3 w-20 rounded-md" />
+            <Skeleton className="h-4 w-[72%] rounded-md" />
+          </div>
+          <Skeleton className="h-4 w-4 rounded-sm" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export function PaymentMethodConfigSkeleton({
+  inputCount = 2,
+  showImageField = false,
+  showStatusBanner = false,
+  showSecondCard = true,
+}: {
+  inputCount?: number
+  showImageField?: boolean
+  showStatusBanner?: boolean
+  showSecondCard?: boolean
+}) {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex w-full flex-col gap-4 rounded-[28px] border border-gray-200 bg-surface px-4 py-5 shadow-sm">
+        {showStatusBanner ? <Skeleton className="h-16 w-full rounded-xl" /> : null}
+        <div className="flex items-center justify-between gap-3 py-1">
+          <div className="min-w-0 flex-1">
+            <Skeleton className="mb-1.5 h-4 w-24 rounded-md" />
+            <Skeleton className="h-3 w-[70%] rounded-md" />
+          </div>
+          <Skeleton className="h-6 w-11 rounded-full" />
+        </div>
+        <Skeleton className="h-10 w-full rounded-xl" />
+        {Array.from({ length: inputCount }, (_, index) => (
+          <div key={index} className="flex flex-col gap-2">
+            <Skeleton className="h-3.5 w-24 rounded-md" />
+            <Skeleton className="h-12 w-full rounded-xl" />
+          </div>
+        ))}
+        {showImageField ? <Skeleton className="h-44 w-full rounded-2xl" /> : null}
+      </div>
+      {showSecondCard ? (
+        <div className="flex w-full flex-col gap-2 rounded-[28px] border border-gray-200 bg-gray-50 px-5 py-4">
+          <Skeleton className="h-3.5 w-full rounded-md" />
+          <Skeleton className="h-3.5 w-[92%] rounded-md" />
+          <Skeleton className="h-3.5 w-[85%] rounded-md" />
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 export function NotificationSettingsSkeleton() {
   return (
     <div className="flex flex-col gap-4">

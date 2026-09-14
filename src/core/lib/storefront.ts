@@ -10,3 +10,15 @@ export function buildSubdomainUrl(slug: string): string {
 export function buildProductSlug(product: { id: number; name: string }): string {
   return `${slugify(product.name)}${product.id ? `-${product.id}` : ''}`
 }
+
+export function buildStorefrontProductUrl(
+  storeSlug: string,
+  product: { id: number; name: string },
+  variantId?: number | null,
+): string {
+  const base = `${buildSubdomainUrl(storeSlug)}/product/${buildProductSlug(product)}`
+  if (variantId != null) {
+    return `${base}?variant=${variantId}`
+  }
+  return base
+}

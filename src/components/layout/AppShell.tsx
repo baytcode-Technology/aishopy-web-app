@@ -12,6 +12,7 @@ import { fetchSupportAdminStatus } from '@/core/api/support'
 import { getErrorMessage } from '@/core/lib/api-error'
 import { UnreadCountBadge } from '@/components/ui/UnreadCountBadge'
 import { useAuth } from '@/providers/auth-provider'
+import { useChatsUnread } from '@/providers/chats-unread-provider'
 import { useOrdersUnread } from '@/providers/orders-unread-provider'
 import { useStore } from '@/providers/store-provider'
 import Link from 'next/link'
@@ -37,6 +38,11 @@ const SETTINGS_STACK = [
   '/staff-management',
   '/account-coming-soon',
   '/platform-admin',
+  '/connect-whatsapp',
+  '/instagram-connect',
+  '/website-customize',
+  '/template-preview',
+  '/payment-methods',
 ]
 
 function isDetailRoute(pathname: string) {
@@ -46,6 +52,7 @@ function isDetailRoute(pathname: string) {
   if (/^\/products\/categories\/[^/]+$/.test(pathname)) return true
   if (/^\/products\/[^/]+$/.test(pathname) && pathname !== '/products/categories') return true
   if (/^\/orders\/[^/]+$/.test(pathname)) return true
+  if (/^\/inbox\/[^/]+$/.test(pathname)) return true
   return false
 }
 
@@ -121,6 +128,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { signOut } = useAuth()
   const { store, sessionStoreName, clearStore } = useStore()
   const { ordersUnreadCount } = useOrdersUnread()
+  const { chatsUnreadCount } = useChatsUnread()
   const storeName = store?.name ?? sessionStoreName ?? 'AiShopy'
   const hideTabs = isDetailRoute(pathname)
 
@@ -157,6 +165,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                       <Icon className={`h-5 w-5 ${active ? 'text-ink' : 'text-gray-400'}`} />
                       {href === '/orders' ? (
                         <UnreadCountBadge count={ordersUnreadCount} className="absolute -right-2 -top-1" />
+                      ) : null}
+                      {href === '/inbox' ? (
+                        <UnreadCountBadge count={chatsUnreadCount} className="absolute -right-2 -top-1" />
                       ) : null}
                     </span>
                     {label}
@@ -202,6 +213,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                         <Icon className={`h-5 w-5 ${active ? 'text-ink' : 'text-gray-400'}`} />
                         {href === '/orders' ? (
                           <UnreadCountBadge count={ordersUnreadCount} className="absolute -right-2 -top-1" />
+                        ) : null}
+                        {href === '/inbox' ? (
+                          <UnreadCountBadge count={chatsUnreadCount} className="absolute -right-2 -top-1" />
                         ) : null}
                       </span>
                       <span

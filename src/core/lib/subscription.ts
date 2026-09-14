@@ -55,3 +55,10 @@ export function getStorePlan(
 ): SubscriptionPlan {
   return store?.subscription_plan ?? 'starter'
 }
+
+export const CHAT_GATE_FEATURES = [
+  'WhatsApp inbox integration',
+  'Instagram inbox integration',
+  'AI auto replies',
+  'AI product recommendations',
+] as const
