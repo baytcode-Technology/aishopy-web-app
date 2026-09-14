@@ -10,10 +10,6 @@ import { useStore } from '@/providers/store-provider'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-function comingSoonHref(id: string) {
-  return `/account-coming-soon?id=${id}`
-}
-
 export default function AdminDashboardPage() {
   const router = useRouter()
   const { store, role } = useStore()
@@ -29,7 +25,7 @@ export default function AdminDashboardPage() {
 
   const currentDomain = store?.slug ? `${store.slug}.${env.storefrontBaseDomain}` : '—'
 
-  const goToSubscription = () => router.push(comingSoonHref('subscription'))
+  const goToSubscription = () => router.push('/subscription')
 
   const handleDomainPress = () => {
     if (!premium) {
@@ -87,7 +83,7 @@ export default function AdminDashboardPage() {
           value="Smart assistant for your store"
           icon="magic"
           showChevron
-          onPress={() => router.push(comingSoonHref('chat-boat'))}
+          onPress={() => router.push('/chat-boat')}
         />
 
         <LockedMenuRow

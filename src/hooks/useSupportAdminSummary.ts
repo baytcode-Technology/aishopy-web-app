@@ -9,25 +9,39 @@ const EMPTY: SupportAdminSummary = {
   awaiting_manual_count: 0,
 }
 
+const POLL_MS = 5000
+
 export function useSupportAdminSummary(enabled: boolean) {
   const [summary, setSummary] = useState<SupportAdminSummary>(EMPTY)
 
   const refresh = useCallback(async () => {
-    if (!enabled) {
-      setSummary(EMPTY)
-      return
-    }
+    if (!enabled) return
     try {
       const res = await fetchSupportAdminSummary()
       setSummary(res.data)
     } catch {
-      setSummary(EMPTY)
+      // Keep last known counts.
     }
   }, [enabled])
 
   useEffect(() => {
+    if (!enabled) {
+      setSummary(EMPTY)
+      return
+    }
+
     void refresh()
-  }, [refresh])
+    const interval = window.setInterval(() => void refresh(), POLL_MS)
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') void refresh()
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+
+    return () => {
+      window.clearInterval(interval)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [enabled, refresh])
 
   return { summary, refresh }
 }

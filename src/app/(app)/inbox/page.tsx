@@ -26,6 +26,7 @@ import { usePlatformAdmin } from '@/hooks/usePlatformAdmin'
 import { useChatSocket } from '@/providers/chat-socket-provider'
 import { useChatsUnread } from '@/providers/chats-unread-provider'
 import { useStore } from '@/providers/store-provider'
+import { useSupportUnread } from '@/providers/support-unread-provider'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
@@ -37,6 +38,7 @@ type LoadChatsOptions = {
 export default function InboxPage() {
   const router = useRouter()
   const { store } = useStore()
+  const { supportUnreadCount } = useSupportUnread()
   const premium = hasPremiumAccess(store)
   const { isPlatformAdmin } = usePlatformAdmin()
   const { syncChatsUnread, isActiveChat } = useChatsUnread()
@@ -223,7 +225,7 @@ export default function InboxPage() {
 
         {!premium && store?.id ? (
           <ChatsSubscriptionGate
-            onViewPlans={() => router.push('/account-coming-soon?id=subscription')}
+            onViewPlans={() => router.push('/subscription')}
           />
         ) : (
           <>
@@ -266,7 +268,8 @@ export default function InboxPage() {
 
         <Fab
           label="Chat with AI"
-          onClick={() => router.push('/account-coming-soon?id=help-center')}
+          badgeCount={supportUnreadCount}
+          onClick={() => router.push('/help-center')}
         >
           <MenuIcon name="comment-o" className="h-[22px] w-[22px] text-brand-on-primary" />
         </Fab>

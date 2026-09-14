@@ -43,6 +43,12 @@ const SETTINGS_STACK = [
   '/website-customize',
   '/template-preview',
   '/payment-methods',
+  '/subscription',
+  '/subscription-success',
+  '/chat-boat',
+  '/help-center',
+  '/platform-support-inbox',
+  '/platform-support',
 ]
 
 function isDetailRoute(pathname: string) {

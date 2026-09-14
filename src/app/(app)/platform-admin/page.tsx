@@ -59,7 +59,7 @@ export default function PlatformAdminPage() {
             }
             icon="inbox"
             showChevron
-            onPress={() => router.push('/account-coming-soon?id=support-inbox')}
+            onPress={() => router.push('/platform-support-inbox')}
           />
           {unreadOnTickets > 0 ? (
             <div className="absolute right-5 top-3">

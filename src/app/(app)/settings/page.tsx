@@ -105,7 +105,7 @@ export default function SettingsPage() {
             value="AiShopy merchant Chat with AI"
             icon="inbox"
             showChevron
-            onPress={() => router.push(comingSoonHref('support-inbox'))}
+            onPress={() => router.push('/platform-support-inbox')}
           />
           <MenuRow
             label="Create a store"
@@ -199,7 +199,7 @@ export default function SettingsPage() {
               value="Inbox auto-reply on or off"
               icon="magic"
               showChevron
-              onPress={() => router.push(comingSoonHref('chat-boat'))}
+              onPress={() => router.push('/chat-boat')}
             />
             <MenuRow
               label="Printer"
@@ -213,7 +213,7 @@ export default function SettingsPage() {
               value={store ? getPlanLabel(getStorePlan(store)) : 'Choose a plan'}
               icon="calendar"
               showChevron
-              onPress={() => router.push(comingSoonHref('subscription'))}
+              onPress={() => router.push('/subscription')}
             />
             {role === 'owner' ? (
               <MenuRow
@@ -243,7 +243,7 @@ export default function SettingsPage() {
                     }
                     icon="inbox"
                     showChevron
-                    onPress={() => router.push(comingSoonHref('support-inbox'))}
+                    onPress={() => router.push('/platform-support-inbox')}
                   />
                   {unreadOnTickets > 0 ? (
                     <div className="absolute right-5 top-3">
@@ -265,7 +265,7 @@ export default function SettingsPage() {
                 value=""
                 icon="question-circle-o"
                 showChevron
-                onPress={() => router.push(comingSoonHref('help-center'))}
+                onPress={() => router.push('/help-center')}
               />
               <MenuRow
                 label="Privacy policy"

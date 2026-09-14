@@ -173,6 +173,26 @@ export function PaymentMethodConfigSkeleton({
   )
 }
 
+export function SubscriptionPlanCardsSkeleton({ count = 2 }: { count?: number }) {
+  return (
+    <div className="flex flex-col gap-5">
+      {Array.from({ length: count }, (_, index) => (
+        <div
+          key={index}
+          className="overflow-hidden rounded-[28px] border border-gray-200 bg-surface px-6 py-6 shadow-sm"
+        >
+          <Skeleton className="mb-3 h-8 w-8 rounded-md" />
+          <Skeleton className="mb-2 h-6 w-40 rounded-md" />
+          <Skeleton className="mb-5 h-8 w-28 rounded-md" />
+          {[0, 1, 2, 3, 4].map((row) => (
+            <Skeleton key={row} className="mb-3 h-4 w-full rounded-md" />
+          ))}
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export function NotificationSettingsSkeleton() {
   return (
     <div className="flex flex-col gap-4">

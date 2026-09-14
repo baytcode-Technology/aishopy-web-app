@@ -9,6 +9,7 @@ type Props = {
   message: string
   confirmLabel?: string
   cancelLabel?: string
+  confirmVariant?: 'danger' | 'primary'
   loading?: boolean
   onCancel: () => void
   onConfirm: () => void
@@ -20,6 +21,7 @@ export function ConfirmDialog({
   message,
   confirmLabel = 'Delete',
   cancelLabel = 'Cancel',
+  confirmVariant = 'danger',
   loading,
   onCancel,
   onConfirm,
@@ -34,7 +36,12 @@ export function ConfirmDialog({
       footer={
         <div className="flex gap-3">
           <Button label={cancelLabel} variant="outline" disabled={loading} onClick={onCancel} />
-          <Button label={confirmLabel} variant="danger" loading={loading} onClick={onConfirm} />
+          <Button
+            label={confirmLabel}
+            variant={confirmVariant}
+            loading={loading}
+            onClick={onConfirm}
+          />
         </div>
       }
     >
