@@ -1,0 +1,51 @@
+import type { ReactNode } from 'react'
+
+type Props = {
+  open: boolean
+  title: string
+  subtitle?: string
+  onClose: () => void
+  children: ReactNode
+  footer?: ReactNode
+  zClass?: string
+}
+
+export function Modal({
+  open,
+  title,
+  subtitle,
+  onClose,
+  children,
+  footer,
+  zClass = 'z-40',
+}: Props) {
+  if (!open) return null
+
+  return (
+    <div className={`fixed inset-0 ${zClass} flex items-end justify-center bg-ink-overlay p-0 lg:items-center lg:p-6`}>
+      <button
+        type="button"
+        aria-label="Close dialog"
+        className="absolute inset-0"
+        onClick={onClose}
+      />
+      <div className="relative z-10 flex max-h-[92vh] w-full max-w-lg flex-col rounded-t-3xl bg-surface shadow-xl lg:rounded-3xl">
+        <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+          <div className="min-w-0 pr-3">
+            <h2 className="text-lg font-semibold tracking-tight text-ink">{title}</h2>
+            {subtitle ? <p className="mt-0.5 truncate text-[13px] text-gray-500">{subtitle}</p> : null}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-[13px] font-bold text-gray-500"
+          >
+            Close
+          </button>
+        </div>
+        <div className="overflow-y-auto px-5 py-4">{children}</div>
+        {footer ? <div className="border-t border-gray-200 px-5 py-4">{footer}</div> : null}
+      </div>
+    </div>
+  )
+}

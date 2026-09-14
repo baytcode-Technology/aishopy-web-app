@@ -1,9 +1,11 @@
 import type { Metadata } from 'next'
+import { AppProviders } from '@/providers/app-providers'
 import './globals.css'
 
 export const metadata: Metadata = {
   title: 'AiShopy',
   description: 'Merchant dashboard for AiShopy. Manage your store in the browser.',
+  icons: { icon: '/app_logo.jpg' },
 }
 
 export default function RootLayout({
@@ -13,7 +15,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <AppProviders>{children}</AppProviders>
+      </body>
     </html>
   )
 }

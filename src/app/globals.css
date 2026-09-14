@@ -2,11 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --color-ink: #0a0a0b;
+  --color-ink-overlay: rgba(10, 10, 11, 0.45);
+  --color-ink-soft: rgba(10, 10, 11, 0.55);
+  --color-ink-counter: rgba(10, 10, 11, 0.65);
+  --color-charcoal: #141416;
+  --color-surface: #ffffff;
+  --color-gray-50: #fafafa;
+  --color-gray-100: #f5f5f5;
+  --color-gray-200: #e4e4e7;
+  --color-gray-300: #d4d4d8;
+  --color-gray-400: #a1a1aa;
+  --color-gray-500: #71717a;
+  --color-gray-600: #52525b;
+  --color-gray-700: #3f3f46;
+  --color-success: #18181b;
+  --color-success-bg: #f4f4f5;
+  --color-success-border: #e4e4e7;
+  --color-danger: #18181b;
+  --color-danger-bg: #f4f4f5;
+  --color-danger-border: #e4e4e7;
+  --color-warning: #52525b;
+  --color-warning-bg: #f4f4f5;
+  --color-brand-primary: #0a0a0b;
+  --color-brand-green: #3eb056;
+  --color-brand-on-primary: #ffffff;
+}
+
 html,
 body {
   min-height: 100%;
 }
 
 body {
-  @apply bg-zinc-50 text-brand-ink antialiased;
+  @apply bg-gray-100 text-ink antialiased;
 }
