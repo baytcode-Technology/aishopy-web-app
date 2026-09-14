@@ -202,8 +202,8 @@ export function MessageBubble({ message, storeId, onLongPress, onForward }: Prop
     <>
       {showForwardIcon ? (
         <div
-          className={`max-w-[88%] ${hasReactions ? 'mb-5' : 'mb-3'} ${
-            outgoing ? 'self-end' : 'self-start'
+          className={`max-w-[88%] w-fit ${hasReactions ? 'mb-5' : 'mb-3'} ${
+            outgoing ? 'ml-auto self-end' : 'mr-auto self-start'
           }`}
         >
           <div className={`flex items-end gap-2 ${outgoing ? 'justify-end' : 'justify-start'}`}>
@@ -215,8 +215,8 @@ export function MessageBubble({ message, storeId, onLongPress, onForward }: Prop
       ) : (
         <button
           type="button"
-          className={`max-w-[82%] text-left ${hasReactions ? 'mb-5' : 'mb-3'} ${
-            outgoing ? 'self-end' : 'self-start'
+          className={`w-fit max-w-[82%] text-left ${hasReactions ? 'mb-5' : 'mb-3'} ${
+            outgoing ? 'ml-auto self-end' : 'mr-auto self-start'
           }`}
           onContextMenu={(e) => {
             e.preventDefault()

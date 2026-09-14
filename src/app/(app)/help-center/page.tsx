@@ -231,7 +231,7 @@ export default function HelpCenterPage() {
   const showStarters = canChat && messages.length === 0 && !isSending
 
   return (
-    <div className="flex h-[100dvh] flex-col overflow-hidden bg-gray-100">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-gray-100">
       <div className="flex items-center gap-2.5 bg-brand-green px-3 py-3">
         <button
           type="button"

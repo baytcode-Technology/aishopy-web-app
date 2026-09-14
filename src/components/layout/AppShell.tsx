@@ -15,6 +15,7 @@ import { useAuth } from '@/providers/auth-provider'
 import { useChatsUnread } from '@/providers/chats-unread-provider'
 import { useOrdersUnread } from '@/providers/orders-unread-provider'
 import { useStore } from '@/providers/store-provider'
+import { useSupportUnread } from '@/providers/support-unread-provider'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState, type ReactNode } from 'react'
@@ -59,6 +60,13 @@ function isDetailRoute(pathname: string) {
   if (/^\/products\/[^/]+$/.test(pathname) && pathname !== '/products/categories') return true
   if (/^\/orders\/[^/]+$/.test(pathname)) return true
   if (/^\/inbox\/[^/]+$/.test(pathname)) return true
+  return false
+}
+
+function isChatThreadRoute(pathname: string) {
+  if (pathname === '/help-center') return true
+  if (/^\/inbox\/[^/]+$/.test(pathname)) return true
+  if (/^\/platform-support\/[^/]+$/.test(pathname)) return true
   return false
 }
 
@@ -135,8 +143,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { store, sessionStoreName, clearStore } = useStore()
   const { ordersUnreadCount } = useOrdersUnread()
   const { chatsUnreadCount } = useChatsUnread()
+  const { supportUnreadCount } = useSupportUnread()
+  const chatsNavUnreadCount = chatsUnreadCount + supportUnreadCount
   const storeName = store?.name ?? sessionStoreName ?? 'AiShopy'
   const hideTabs = isDetailRoute(pathname)
+  const chatThread = isChatThreadRoute(pathname)
 
   const handleSignOut = async () => {
     await clearStore()
@@ -175,7 +186,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                             <UnreadCountBadge count={ordersUnreadCount} className="absolute -right-2 -top-1" />
                           ) : null}
                           {href === '/inbox' ? (
-                            <UnreadCountBadge count={chatsUnreadCount} className="absolute -right-2 -top-1" />
+                            <UnreadCountBadge count={chatsNavUnreadCount} className="absolute -right-2 -top-1" />
                           ) : null}
                         </span>
                         {label}
@@ -203,11 +214,15 @@ export function AppShell({ children }: { children: ReactNode }) {
           </aside>
 
           <div
-            className={`flex min-h-screen flex-1 flex-col lg:min-h-0 lg:overflow-y-auto ${
-              hideTabs ? '' : 'pb-24 lg:pb-0'
-            }`}
+            className={
+              chatThread
+                ? 'flex h-dvh min-h-0 flex-1 flex-col overflow-hidden'
+                : `flex min-h-screen flex-1 flex-col lg:min-h-0 lg:overflow-y-auto ${
+                    hideTabs ? '' : 'pb-24 lg:pb-0'
+                  }`
+            }
           >
-            <div className="flex-1">{children}</div>
+            <div className={chatThread ? 'flex min-h-0 flex-1 flex-col' : 'flex-1'}>{children}</div>
           </div>
 
           {hideTabs ? null : (
@@ -229,7 +244,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                           <UnreadCountBadge count={ordersUnreadCount} className="absolute -right-2 -top-1" />
                         ) : null}
                         {href === '/inbox' ? (
-                          <UnreadCountBadge count={chatsUnreadCount} className="absolute -right-2 -top-1" />
+                          <UnreadCountBadge count={chatsNavUnreadCount} className="absolute -right-2 -top-1" />
                         ) : null}
                       </span>
                       <span

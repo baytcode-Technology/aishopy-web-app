@@ -41,7 +41,7 @@ export default function InboxPage() {
   const { supportUnreadCount } = useSupportUnread()
   const premium = hasPremiumAccess(store)
   const { isPlatformAdmin } = usePlatformAdmin()
-  const { syncChatsUnread, isActiveChat } = useChatsUnread()
+  const { syncChatsUnread, reconcileChatsUnread, isActiveChat } = useChatsUnread()
   const {
     onConversationUpdated,
     onMessageNew,
@@ -78,8 +78,10 @@ export default function InboxPage() {
         ])
         setItems((prev) => {
           const merged = silent ? mergeChatLists(prev, mergedFromApi) : mergedFromApi
-          return merged.map((item) =>
-            isActiveChat(item.id, item.channel) ? { ...item, unread: 0 } : item,
+          return reconcileChatsUnread(
+            merged.map((item) =>
+              isActiveChat(item.id, item.channel) ? { ...item, unread: 0 } : item,
+            ),
           )
         })
         setNotice(null)
@@ -92,7 +94,7 @@ export default function InboxPage() {
         }
       }
     },
-    [store?.id, isActiveChat],
+    [store?.id, isActiveChat, reconcileChatsUnread],
   )
 
   useEffect(() => {
@@ -101,6 +103,21 @@ export default function InboxPage() {
 
   useEffect(() => {
     void loadChats({ silent: itemsLengthRef.current > 0 })
+  }, [loadChats])
+
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        void loadChats({ silent: itemsLengthRef.current > 0 })
+      }
+    }
+
+    document.addEventListener('visibilitychange', onVisibility)
+    window.addEventListener('focus', onVisibility)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility)
+      window.removeEventListener('focus', onVisibility)
+    }
   }, [loadChats])
 
   useEffect(() => {

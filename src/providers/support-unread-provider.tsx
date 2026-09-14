@@ -91,6 +91,23 @@ export function SupportUnreadProvider({ children }: { children: ReactNode }) {
     return () => window.clearInterval(interval)
   }, [store?.id, refreshSupportUnread])
 
+  useEffect(() => {
+    if (!store?.id) return
+
+    const refreshIfVisible = () => {
+      if (document.visibilityState === 'visible') {
+        void refreshSupportUnread()
+      }
+    }
+
+    document.addEventListener('visibilitychange', refreshIfVisible)
+    window.addEventListener('focus', refreshIfVisible)
+    return () => {
+      document.removeEventListener('visibilitychange', refreshIfVisible)
+      window.removeEventListener('focus', refreshIfVisible)
+    }
+  }, [store?.id, refreshSupportUnread])
+
   const value = useMemo(
     () => ({
       supportUnreadCount,

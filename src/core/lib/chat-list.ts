@@ -124,8 +124,13 @@ export function mergeChatLists(current: ChatListItem[], fetched: ChatListItem[])
       title: item.title || prev.title,
       replyMode: item.replyMode ?? prev.replyMode,
       aiPausedUntil: item.aiPausedUntil ?? prev.aiPausedUntil,
+      unread: resolveListUnread({
+        isActive: false,
+        payloadUnread: item.unread,
+        existingUnread: prev.unread,
+      }),
       ...(prevTs > nextTs
-        ? { subtitle: prev.subtitle, time: prev.time, sortAt: prev.sortAt, unread: prev.unread }
+        ? { subtitle: prev.subtitle, time: prev.time, sortAt: prev.sortAt }
         : {}),
     })
   }

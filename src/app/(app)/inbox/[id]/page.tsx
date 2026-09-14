@@ -14,6 +14,7 @@ import { ForwardMessageModal } from '@/components/chat/ForwardMessageModal'
 import { MessageBubble } from '@/components/chat/MessageBubble'
 import { HeaderOverflow } from '@/components/catalog/HeaderOverflow'
 import { SettingsHeaderButton } from '@/components/catalog/SettingsHeaderButton'
+import { SupportKeyboardChatLayout } from '@/components/support/SupportKeyboardChatLayout'
 import { MenuIcon } from '@/components/ui/MenuIcons'
 import {
   fetchChatMessages,
@@ -34,6 +35,7 @@ import {
   dateLabelFromTimestamp,
   injectChatDateSeparators,
   isDateSeparatorItem,
+  stickyDateLabelFromTopVisibleItems,
 } from '@/core/lib/chat-date-separators'
 import { isAiPaused } from '@/core/lib/inbox-ai'
 import { prepareWhatsAppMessagesForDisplay } from '@/core/lib/prepare-whatsapp-messages'
@@ -42,12 +44,13 @@ import { hasPremiumAccess } from '@/core/lib/subscription'
 import type { ChatChannel, ChatMessage } from '@/core/types/chat'
 import { useChatSocket } from '@/providers/chat-socket-provider'
 import { ChatVoicePlayerProvider } from '@/providers/chat-voice-player-provider'
+import { useChatVoiceRecording } from '@/providers/chat-voice-recording-provider'
 import { useChatsUnread } from '@/providers/chats-unread-provider'
 import { useStore } from '@/providers/store-provider'
 import { useAppTheme } from '@/providers/theme-provider'
 import Link from 'next/link'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type UIEvent } from 'react'
 
 function dedupeByIdAndMeta(list: ChatMessage[]): ChatMessage[] {
   const seen = new Set<string>()
@@ -113,6 +116,7 @@ function InboxThreadPageInner() {
   const { store } = useStore()
   const { isDark } = useAppTheme()
   const { markChatRead, setActiveChat, isActiveChat } = useChatsUnread()
+  const { pauseRecording } = useChatVoiceRecording()
   const {
     onMessageNew,
     onMessageStatus,
@@ -172,6 +176,17 @@ function InboxThreadPageInner() {
     if (!el) return
     el.scrollTop = el.scrollHeight
   }, [])
+
+  const triggerAutoScroll = useCallback(() => {
+    stickToBottomRef.current = true
+    requestAnimationFrame(scrollToBottom)
+  }, [scrollToBottom])
+
+  useEffect(() => {
+    if (store && !hasPremiumAccess(store)) {
+      router.replace('/subscription')
+    }
+  }, [store, router])
 
   const chatBoatActive =
     hasPremiumAccess(store) &&
@@ -372,13 +387,14 @@ function InboxThreadPageInner() {
     setActiveChat({ conversationId, channel })
     scheduleMarkReadRef.current()
     return () => {
+      void pauseRecording(conversationId)
       setActiveChat(null)
       if (markReadTimerRef.current) {
         clearTimeout(markReadTimerRef.current)
         markReadTimerRef.current = null
       }
     }
-  }, [conversationId, channel, setActiveChat])
+  }, [conversationId, channel, setActiveChat, pauseRecording])
 
   useEffect(() => {
     if (!Number.isFinite(conversationId)) return
@@ -421,7 +437,7 @@ function InboxThreadPageInner() {
         const next = dedupeByIdAndMeta([incoming, ...prev])
         return channel === 'whatsapp' ? prepareWhatsAppMessagesForDisplay(next) : next
       })
-      if (stickToBottomRef.current) requestAnimationFrame(scrollToBottom)
+      triggerAutoScroll()
       if (payload.message.direction === 'inbound') {
         scheduleMarkReadRef.current()
         setAiPausedUntil(null)
@@ -456,7 +472,7 @@ function InboxThreadPageInner() {
     onMessageNew,
     onInstagramMessageNew,
     onMessageStatus,
-    scrollToBottom,
+    triggerAutoScroll,
   ])
 
   useEffect(() => {
@@ -516,7 +532,7 @@ function InboxThreadPageInner() {
       },
       ...prev,
     ])
-    requestAnimationFrame(scrollToBottom)
+    requestAnimationFrame(triggerAutoScroll)
 
     try {
       if (channel === 'instagram') {
@@ -617,7 +633,7 @@ function InboxThreadPageInner() {
         },
         ...prev,
       ])
-      requestAnimationFrame(scrollToBottom)
+      requestAnimationFrame(triggerAutoScroll)
 
       try {
         const res = await sendChatMessage({
@@ -641,7 +657,7 @@ function InboxThreadPageInner() {
         throw e
       }
     },
-    [store?.id, customerPhone, conversationId, channel, scrollToBottom],
+    [store?.id, customerPhone, conversationId, channel, triggerAutoScroll],
   )
 
   const sendProductShare = async (payload: ProductShareSendPayload) => {
@@ -673,6 +689,36 @@ function InboxThreadPageInner() {
     () => [...injectChatDateSeparators(messages)].reverse(),
     [messages],
   )
+  const displayItemsRef = useRef(displayItems)
+  displayItemsRef.current = displayItems
+
+  const updateStickyDate = useCallback(() => {
+    const el = listRef.current
+    if (!el) return
+    const pane = el.getBoundingClientRect()
+    const nodes = el.querySelectorAll('[data-thread-index]')
+    const viewable: { index: number; item: (typeof displayItems)[number] }[] = []
+    nodes.forEach((node) => {
+      const rect = node.getBoundingClientRect()
+      if (rect.bottom > pane.top && rect.top < pane.bottom) {
+        const index = Number(node.getAttribute('data-thread-index'))
+        const item = displayItemsRef.current[index]
+        if (Number.isFinite(index) && item) viewable.push({ index, item })
+      }
+    })
+    const label = stickyDateLabelFromTopVisibleItems(viewable)
+    if (label) setStickyDateLabel(label)
+  }, [])
+
+  const handleListScroll = useCallback(
+    (event: UIEvent<HTMLDivElement>) => {
+      const el = event.currentTarget
+      stickToBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80
+      if (el.scrollTop < 80) void loadOlderMessages()
+      updateStickyDate()
+    },
+    [loadOlderMessages, updateStickyDate],
+  )
 
   useEffect(() => {
     setStickyDateLabel(dateLabelFromTimestamp(messages[0]?.timestamp ?? null))
@@ -680,11 +726,12 @@ function InboxThreadPageInner() {
 
   useEffect(() => {
     if (stickToBottomRef.current) requestAnimationFrame(scrollToBottom)
-  }, [displayItems.length, scrollToBottom])
+    requestAnimationFrame(updateStickyDate)
+  }, [displayItems.length, scrollToBottom, updateStickyDate])
 
   if (!Number.isFinite(conversationId)) {
     return (
-      <div className="flex min-h-screen flex-col items-center bg-gray-100">
+      <div className="flex h-full min-h-0 flex-col items-center bg-gray-100">
         <p className="mt-10 text-center font-semibold text-ink">Conversation not found</p>
         <Link href="/inbox" className="mt-4 font-semibold text-brand-primary">
           Go back
@@ -701,9 +748,9 @@ function InboxThreadPageInner() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-gray-100">
+    <div className="flex h-full min-h-0 flex-col bg-gray-100">
       <div
-        className={`flex items-center gap-2.5 px-3 py-3 ${isDark ? 'bg-charcoal' : 'bg-brand-primary'}`}
+        className={`flex shrink-0 items-center gap-2.5 px-3 py-3 ${isDark ? 'bg-charcoal' : 'bg-brand-primary'}`}
       >
         <button type="button" onClick={() => router.push('/inbox')} className="p-1" aria-label="Go back">
           <span className={isDark ? 'text-white' : 'text-brand-on-primary'}>←</span>
@@ -788,33 +835,58 @@ function InboxThreadPageInner() {
         </div>
       ) : null}
 
-      <div className="relative flex min-h-0 flex-1 flex-col">
-        {stickyDateLabel ? (
-          <div className="pointer-events-none absolute left-0 right-0 top-0 z-20 flex justify-center pt-2">
-            <ChatDateSeparator label={stickyDateLabel} variant="sticky" />
-          </div>
-        ) : null}
-        {loadingMore ? (
-          <div className="absolute left-0 right-0 top-0 z-10 flex justify-center py-2">
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-brand-primary border-t-transparent" />
-          </div>
-        ) : null}
-        <div
-          ref={listRef}
-          className="flex-1 overflow-y-auto px-4 pb-3 pt-10"
-          onScroll={(event) => {
-            const el = event.currentTarget
-            stickToBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80
-            if (el.scrollTop < 80) void loadOlderMessages()
-          }}
-        >
-          <div className="flex flex-col">
-            {displayItems.map((item) =>
-              isDateSeparatorItem(item) ? (
-                <ChatDateSeparator key={item.id} label={item.label} />
-              ) : (
+      <SupportKeyboardChatLayout
+        listRef={listRef}
+        onScroll={handleListScroll}
+        onKeyboardShow={scrollToBottom}
+        overlay={
+          <>
+            {stickyDateLabel ? (
+              <div className="pointer-events-none absolute left-0 right-0 top-0 z-20 flex justify-center pt-2">
+                <ChatDateSeparator label={stickyDateLabel} variant="sticky" />
+              </div>
+            ) : null}
+            {loadingMore ? (
+              <div className="absolute left-0 right-0 top-0 z-10 flex justify-center py-2">
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-brand-primary border-t-transparent" />
+              </div>
+            ) : null}
+          </>
+        }
+        footer={
+          (chatBoatActive || aiPausedWhileAuto) && aiPreparingReply ? (
+            <div className="flex items-center gap-2 px-4 py-2">
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-brand-primary border-t-transparent" />
+              <p className="text-[13px] text-gray-500">AI is preparing a reply…</p>
+            </div>
+          ) : null
+        }
+        composer={
+          <ChatComposer
+            conversationId={conversationId}
+            draft={draft}
+            onChangeDraft={setDraft}
+            onSendText={() => void sendMessage()}
+            onSendMedia={sendMediaMessage}
+            onOpenProductPicker={store?.slug ? () => setProductPickerOpen(true) : undefined}
+            channel={channel}
+            onError={setNotice}
+          />
+        }
+      >
+        <div className="flex w-full flex-col px-4 pb-3 pt-10">
+          {displayItems.map((item, index) =>
+            isDateSeparatorItem(item) ? (
+              <div key={item.id} data-thread-index={index} className="flex w-full justify-center">
+                <ChatDateSeparator label={item.label} />
+              </div>
+            ) : (
+              <div
+                key={item.clientKey ?? String(item.id)}
+                data-thread-index={index}
+                className="flex w-full flex-col"
+              >
                 <MessageBubble
-                  key={item.clientKey ?? String(item.id)}
                   message={item}
                   storeId={store?.id}
                   onLongPress={(message) => {
@@ -826,29 +898,11 @@ function InboxThreadPageInner() {
                     setForwardVisible(true)
                   }}
                 />
-              ),
-            )}
-          </div>
+              </div>
+            ),
+          )}
         </div>
-      </div>
-
-      {(chatBoatActive || aiPausedWhileAuto) && aiPreparingReply ? (
-        <div className="flex items-center gap-2 px-4 py-2">
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-brand-primary border-t-transparent" />
-          <p className="text-[13px] text-gray-500">AI is preparing a reply…</p>
-        </div>
-      ) : null}
-
-      <ChatComposer
-        conversationId={conversationId}
-        draft={draft}
-        onChangeDraft={setDraft}
-        onSendText={() => void sendMessage()}
-        onSendMedia={sendMediaMessage}
-        onOpenProductPicker={store?.slug ? () => setProductPickerOpen(true) : undefined}
-        channel={channel}
-        onError={setNotice}
-      />
+      </SupportKeyboardChatLayout>
 
       <ChatMessageActionsSheet
         visible={actionsVisible}

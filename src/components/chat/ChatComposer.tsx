@@ -4,6 +4,7 @@ import { ChatAttachSheet } from '@/components/chat/ChatAttachSheet'
 import { ChatMediaComposeBar } from '@/components/chat/ChatMediaComposeBar'
 import { getErrorMessage } from '@/core/lib/api-error'
 import type { ChatChannel } from '@/core/types/chat'
+import { useChatVoiceRecording } from '@/providers/chat-voice-recording-provider'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 const MAX_MEDIA_SELECTION = 10
@@ -16,11 +17,6 @@ export type OutboundMediaPayload = {
   mimeType: string
   voice?: boolean
   caption?: string
-}
-
-type VoiceSession = {
-  status: 'recording' | 'paused'
-  seconds: number
 }
 
 type Props = {
@@ -72,37 +68,26 @@ export function ChatComposer({
   channel,
   onError,
 }: Props) {
+  const {
+    session,
+    startRecording,
+    resumeRecording,
+    cancelRecording,
+    finishRecording,
+  } = useChatVoiceRecording()
   const [busy, setBusy] = useState(false)
   const [attachOpen, setAttachOpen] = useState(false)
   const [pendingMedia, setPendingMedia] = useState<OutboundMediaPayload[]>([])
   const [mediaCaption, setMediaCaption] = useState('')
-  const [voice, setVoice] = useState<VoiceSession | null>(null)
   const photoInputRef = useRef<HTMLInputElement>(null)
   const videoInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
-  const recorderRef = useRef<MediaRecorder | null>(null)
-  const chunksRef = useRef<Blob[]>([])
-  const streamRef = useRef<MediaStream | null>(null)
-  const tickRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
+  const activeSession = session?.conversationId === conversationId ? session : null
   const supportsRichComposer = channel === 'whatsapp' || channel === 'instagram'
-
-  const clearTick = () => {
-    if (tickRef.current) {
-      clearInterval(tickRef.current)
-      tickRef.current = null
-    }
-  }
-
-  const stopStream = () => {
-    streamRef.current?.getTracks().forEach((track) => track.stop())
-    streamRef.current = null
-  }
 
   useEffect(() => {
     return () => {
-      clearTick()
-      stopStream()
       pendingMedia.forEach((item) => URL.revokeObjectURL(item.uri))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -149,69 +134,32 @@ export function ChatComposer({
     }
   }
 
-  const startRecording = async () => {
+  const handleStartRecording = async () => {
     if (disabled || busy || !supportsRichComposer) return
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      streamRef.current = stream
-      const recorder = new MediaRecorder(stream)
-      chunksRef.current = []
-      recorder.ondataavailable = (event) => {
-        if (event.data.size) chunksRef.current.push(event.data)
-      }
-      recorder.start()
-      recorderRef.current = recorder
-      setVoice({ status: 'recording', seconds: 0 })
-      tickRef.current = setInterval(() => {
-        setVoice((current) =>
-          current?.status === 'recording' ? { ...current, seconds: current.seconds + 1 } : current,
-        )
-      }, 1000)
+      await startRecording(conversationId)
     } catch (e: unknown) {
       onError?.(getErrorMessage(e, 'Could not start recording'))
     }
   }
 
-  const cancelRecording = () => {
-    clearTick()
-    recorderRef.current?.stop()
-    recorderRef.current = null
-    chunksRef.current = []
-    stopStream()
-    setVoice(null)
+  const handleCancelRecording = async () => {
+    await cancelRecording(conversationId)
   }
 
-  const resumeRecording = () => {
-    if (recorderRef.current?.state === 'paused') {
-      recorderRef.current.resume()
-      setVoice((current) => (current ? { ...current, status: 'recording' } : current))
-      tickRef.current = setInterval(() => {
-        setVoice((current) =>
-          current?.status === 'recording' ? { ...current, seconds: current.seconds + 1 } : current,
-        )
-      }, 1000)
+  const handleResumeRecording = async () => {
+    try {
+      await resumeRecording(conversationId)
+    } catch (e: unknown) {
+      onError?.(getErrorMessage(e, 'Could not resume recording'))
     }
   }
 
-  const finishRecording = async () => {
-    const recorder = recorderRef.current
-    if (!recorder) return
+  const handleFinishRecording = async () => {
     setBusy(true)
     try {
-      const blob = await new Promise<Blob>((resolve, reject) => {
-        recorder.onstop = () => {
-          resolve(new Blob(chunksRef.current, { type: recorder.mimeType || 'audio/webm' }))
-        }
-        recorder.onerror = () => reject(new Error('Recording file missing'))
-        if (recorder.state !== 'inactive') recorder.stop()
-        else resolve(new Blob(chunksRef.current, { type: recorder.mimeType || 'audio/webm' }))
-      })
-      clearTick()
-      stopStream()
-      recorderRef.current = null
-      setVoice(null)
-      if (!blob.size) throw new Error('Recording file missing')
-      const file = new File([blob], `voice-${Date.now()}.webm`, { type: blob.type || 'audio/webm' })
+      const file = await finishRecording(conversationId)
+      if (!file) throw new Error('Recording file missing')
       await onSendMedia({
         type: 'audio',
         uri: URL.createObjectURL(file),
@@ -227,25 +175,25 @@ export function ChatComposer({
     }
   }
 
-  if (voice?.status === 'recording') {
+  if (activeSession?.status === 'recording') {
     return (
       <div className="gap-2 border-t border-gray-200 bg-surface px-3 py-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-full bg-red-500" />
             <span className="font-semibold tabular-nums text-red-600">
-              {formatRecordingTime(voice.seconds)}
+              {formatRecordingTime(activeSession.seconds)}
             </span>
           </div>
           <p className="text-sm text-gray-500">Recording voice message</p>
         </div>
         <div className="mt-2 flex items-center justify-end gap-3">
-          <button type="button" onClick={cancelRecording} className="px-3 py-2 font-semibold text-gray-600">
+          <button type="button" onClick={() => void handleCancelRecording()} className="px-3 py-2 font-semibold text-gray-600">
             Cancel
           </button>
           <button
             type="button"
-            onClick={() => void finishRecording()}
+            onClick={() => void handleFinishRecording()}
             disabled={busy}
             className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-primary text-brand-on-primary"
           >
@@ -258,28 +206,28 @@ export function ChatComposer({
     )
   }
 
-  if (voice?.status === 'paused') {
+  if (activeSession?.status === 'paused') {
     return (
       <div className="gap-2 border-t border-gray-200 bg-surface px-3 py-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
             <span className="font-semibold tabular-nums text-amber-700">
-              {formatRecordingTime(voice.seconds)}
+              {formatRecordingTime(activeSession.seconds)}
             </span>
           </div>
           <p className="text-sm text-gray-500">Voice message paused</p>
         </div>
         <div className="mt-2 flex items-center justify-end gap-3">
-          <button type="button" onClick={cancelRecording} className="px-3 py-2 font-semibold text-gray-600">
+          <button type="button" onClick={() => void handleCancelRecording()} className="px-3 py-2 font-semibold text-gray-600">
             Cancel
           </button>
-          <button type="button" onClick={resumeRecording} className="px-3 py-2 font-semibold text-brand-primary">
+          <button type="button" onClick={() => void handleResumeRecording()} className="px-3 py-2 font-semibold text-brand-primary">
             Resume
           </button>
           <button
             type="button"
-            onClick={() => void finishRecording()}
+            onClick={() => void handleFinishRecording()}
             disabled={busy}
             className="flex h-11 w-11 items-center justify-center rounded-full bg-brand-primary text-brand-on-primary"
           >
@@ -393,7 +341,7 @@ export function ChatComposer({
             ) : null}
             <button
               type="button"
-              onClick={() => void startRecording()}
+              onClick={() => void handleStartRecording()}
               disabled={disabled || busy}
               className="flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-gray-100 text-brand-primary disabled:opacity-45"
             >

@@ -58,6 +58,25 @@ export function stickyDateLabelFromViewableItems(
   return null
 }
 
+/** Chronological (oldest-at-top) lists: sticky label follows the top-most visible item. */
+export function stickyDateLabelFromTopVisibleItems(
+  viewableItems: { index: number | null; item: ChatThreadListItem }[],
+  now = new Date(),
+): string | null {
+  if (viewableItems.length === 0) return null
+
+  const sorted = [...viewableItems].sort((a, b) => (a.index ?? 0) - (b.index ?? 0))
+
+  for (const entry of sorted) {
+    const item = entry.item
+    if (isDateSeparatorItem(item)) return item.label
+    const label = dateLabelFromTimestamp(item.timestamp, now)
+    if (label) return label
+  }
+
+  return null
+}
+
 function dayKeyFromTimestamp(timestamp: string | null): string | null {
   if (!timestamp) return null
   const date = new Date(timestamp)

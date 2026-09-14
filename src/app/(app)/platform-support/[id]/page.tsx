@@ -149,7 +149,7 @@ export default function PlatformSupportDetailPage() {
   }
 
   return (
-    <div className="flex h-[100dvh] flex-col overflow-hidden bg-gray-100">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-gray-100">
       <div className="flex items-center gap-2.5 bg-ink px-3 py-3">
         <button type="button" className="p-1" onClick={goBack} aria-label="Go back">
           <span className="text-brand-on-primary">←</span>
