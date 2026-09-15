@@ -16,7 +16,7 @@ export const env = {
 
 export function getGoogleRedirectUri(): string {
   if (typeof window !== 'undefined' && window.location?.origin) {
-    return `${window.location.origin}/oauth`
+    return `${window.location.origin}/google-callback`
   }
-  return `${env.appUrl.replace(/\/$/, '')}/oauth`
+  return `${env.appUrl.replace(/\/$/, '')}/google-callback`
 }

@@ -63,7 +63,9 @@ export function StorePickerList({
               index < stores.length - 1 ? 'border-b border-gray-100' : ''
             } ${selected || wasLastUsed ? 'bg-gray-50' : ''}`}
           >
-            <StoreAvatar store={item.store} size="sm" />
+            <div className="shrink-0">
+              <StoreAvatar store={item.store} size="sm" />
+            </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-[16px] font-semibold text-ink">{item.store.name}</p>
               <p className="mt-0.5 truncate text-[13px] text-gray-500">{host}</p>

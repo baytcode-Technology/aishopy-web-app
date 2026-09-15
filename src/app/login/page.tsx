@@ -73,7 +73,12 @@ export default function LoginPage() {
           label="Continue"
           loading={loading}
           type="submit"
-          className="border-brand-green bg-brand-green text-white"
+          className="border-brand-green bg-brand-green"
+          style={{
+            backgroundColor: 'var(--color-brand-green)',
+            borderColor: 'var(--color-brand-green)',
+            color: 'var(--color-brand-on-primary)',
+          }}
         />
       </form>
     </AuthLayout>

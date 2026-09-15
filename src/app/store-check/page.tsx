@@ -17,6 +17,13 @@ export default function StoreCheckPage() {
   const [retryKey, setRetryKey] = useState(0)
   const hasRoutedRef = useRef(false)
   const isRunningRef = useRef(false)
+  const refreshStoresRef = useRef(refreshStores)
+  const switchStoreRef = useRef(switchStore)
+  const routerRef = useRef(router)
+
+  refreshStoresRef.current = refreshStores
+  switchStoreRef.current = switchStore
+  routerRef.current = router
 
   useEffect(() => {
     hasRoutedRef.current = false
@@ -26,7 +33,7 @@ export default function StoreCheckPage() {
   useEffect(() => {
     if (authLoading) return
     if (!isAuthenticated) {
-      router.replace('/login')
+      routerRef.current.replace('/login')
       return
     }
     if (hasRoutedRef.current || isRunningRef.current) return
@@ -38,7 +45,7 @@ export default function StoreCheckPage() {
       try {
         setLoadError(null)
         const [list, adminRes] = await Promise.all([
-          refreshStores(),
+          refreshStoresRef.current(),
           fetchSupportAdminStatus().catch(() => ({
             data: { isAdmin: false as boolean },
           })),
@@ -50,30 +57,32 @@ export default function StoreCheckPage() {
         hasRoutedRef.current = true
 
         if (list.length === 0) {
-          router.replace(isAdmin ? '/products' : '/create-store')
+          routerRef.current.replace(isAdmin ? '/products' : '/create-store')
           return
         }
 
         if (list.length === 1) {
-          await switchStore(list[0].store.id)
-          router.replace('/products')
+          await switchStoreRef.current(list[0].store.id)
+          if (cancelled) return
+          routerRef.current.replace('/products')
           return
         }
 
-        router.replace('/select-store')
+        routerRef.current.replace('/select-store')
       } catch (e) {
         if (cancelled) return
         hasRoutedRef.current = false
         setLoadError(getErrorMessage(e, 'Could not load your store'))
       } finally {
-        isRunningRef.current = false
+        if (!cancelled) isRunningRef.current = false
       }
     })()
 
     return () => {
       cancelled = true
+      isRunningRef.current = false
     }
-  }, [authLoading, isAuthenticated, refreshStores, retryKey, router, switchStore])
+  }, [authLoading, isAuthenticated, retryKey])
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-gray-100 px-8">
