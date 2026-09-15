@@ -2,6 +2,7 @@
 
 import { RequireAuth } from '@/components/auth/RequireAuth'
 import { AppLogo } from '@/components/brand/AppLogo'
+import { StorePickerList } from '@/components/store/StorePickerList'
 import { Button } from '@/components/ui/Button'
 import { getStoreSession, normalizeStoreSession } from '@/platform/store-storage'
 import { useAuth } from '@/providers/auth-provider'
@@ -60,29 +61,13 @@ function SelectStoreContent() {
         </p>
       </div>
 
-      <div className="flex flex-col gap-3">
-        {isLoading ? (
-          <p className="text-center text-sm text-gray-500">Loading stores…</p>
-        ) : (
-          stores.map((item) => {
-            const selected =
-              item.store.id === store?.id || item.store.id === lastSessionStoreId
-            return (
-              <button
-                key={item.store.id}
-                type="button"
-                onClick={() => void handleSelect(item.store.id)}
-                className={`rounded-2xl border bg-surface px-4 py-4 text-left ${
-                  selected ? 'border-ink' : 'border-gray-200'
-                }`}
-              >
-                <p className="font-semibold text-ink">{item.store.name}</p>
-                <p className="mt-1 text-sm text-gray-500">{item.store.slug}.aishopy.io</p>
-              </button>
-            )
-          })
-        )}
-      </div>
+      <StorePickerList
+        stores={stores}
+        selectedStoreId={store?.id}
+        lastSessionStoreId={lastSessionStoreId}
+        isLoading={isLoading}
+        onSelect={(storeId) => void handleSelect(storeId)}
+      />
 
       <div className="mt-8 flex flex-col gap-3">
         <Link href="/create-store" className="py-2 text-center text-[15px] font-semibold text-brand-green">

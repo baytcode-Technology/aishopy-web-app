@@ -19,7 +19,7 @@ const sizeStyles = {
 export function StoreAvatar({ store, size = 'md' }: Props) {
   const letter = store?.name?.slice(0, 1).toUpperCase() ?? 'S'
   const styles = sizeStyles[size]
-  const boxClass = `${styles.box} overflow-hidden border border-gray-200`
+  const boxClass = `${styles.box} shrink-0 overflow-hidden border border-gray-200`
 
   if (store?.logo_url) {
     return (
