@@ -9,10 +9,10 @@ type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
 }
 
 const containerClass: Record<Variant, string> = {
-  primary: 'bg-brand-primary border-2 border-brand-primary text-brand-on-primary font-semibold',
-  outline: 'bg-surface border-2 border-ink text-ink font-semibold',
+  primary: 'bg-brand-primary border-2 border-brand-primary text-brand-on-primary font-bold tracking-wide',
+  outline: 'bg-surface border-2 border-ink text-ink font-bold tracking-wide',
   ghost: 'bg-transparent border-0 text-gray-500 uppercase tracking-[0.14em] text-xs font-semibold',
-  danger: 'bg-charcoal border-2 border-charcoal text-brand-on-primary font-semibold',
+  danger: 'bg-charcoal border-2 border-charcoal text-brand-on-primary font-bold tracking-wide',
   destructive: 'border-2 font-bold tracking-wide',
 }
 
