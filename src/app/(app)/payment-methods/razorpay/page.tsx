@@ -458,7 +458,7 @@ export default function RazorpayPaymentPage() {
             </p>
           </div>
 
-          <div className="flex flex-col gap-3 rounded-[28px] border border-gray-200 bg-gray-50 px-5 py-4">
+          <div className="flex min-w-0 max-w-full flex-col gap-3 overflow-hidden rounded-[28px] border border-gray-200 bg-gray-50 px-5 py-4">
             <p className="text-[13px] font-bold text-ink">Setup in Razorpay Dashboard</p>
             <p className="text-[14px] leading-6 text-gray-600">
               1. Sign up at Razorpay and complete business verification there (not in this app).
@@ -491,19 +491,21 @@ export default function RazorpayPaymentPage() {
               </button>
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <p className="text-[13px] font-semibold text-ink">Webhook URL</p>
-              <div className="flex items-center gap-2">
-                <p className="min-w-0 flex-1 font-mono text-[12px] leading-5 text-ink">{webhookUrl}</p>
+            <div className="flex min-w-0 flex-col gap-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[13px] font-semibold text-ink">Webhook URL</p>
                 <button
                   type="button"
                   onClick={() => void copyWebhookUrl()}
                   aria-label="Copy webhook URL"
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-surface text-brand-primary"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-surface text-brand-primary"
                 >
                   <MenuIcon name="copy" className="h-3.5 w-3.5" />
                 </button>
               </div>
+              <p className="min-w-0 max-w-full break-all font-mono text-[12px] leading-5 text-ink">
+                {webhookUrl}
+              </p>
               {isProductionFallback ? (
                 <p className="text-xs text-gray-500">
                   Using production API URL. Set NEXT_PUBLIC_API_URL if you need a different host.
