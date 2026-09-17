@@ -72,4 +72,6 @@ export const endpoints = {
   supportAdminSummary: '/api/support/admin/summary',
   supportAdminMarkRead: (conversationId: number) =>
     `/api/support/admin/conversations/${conversationId}/read`,
+  platformAdminUsers: '/api/platform-admin/users',
+  platformAdminUser: (userId: string) => `/api/platform-admin/users/${userId}`,
 } as const

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button'
 import { MenuRow } from '@/components/ui/MenuRow'
 import { UnreadCountBadge } from '@/components/ui/UnreadCountBadge'
 import { useSupportAdminSummary } from '@/hooks/useSupportAdminSummary'
+import { usePlatformAdmin } from '@/hooks/usePlatformAdmin'
 import { useAuth } from '@/providers/auth-provider'
 import { useStore } from '@/providers/store-provider'
 import { useRouter } from 'next/navigation'
@@ -14,11 +15,18 @@ export default function PlatformAdminPage() {
   const router = useRouter()
   const { user, signOut } = useAuth()
   const { clearStore } = useStore()
+  const { isPlatformAdmin, isLoading: adminLoading } = usePlatformAdmin()
   const { summary, refresh } = useSupportAdminSummary(true)
 
   useEffect(() => {
     void refresh()
   }, [refresh])
+
+  useEffect(() => {
+    if (!adminLoading && !isPlatformAdmin) {
+      router.replace('/dashboard')
+    }
+  }, [adminLoading, isPlatformAdmin, router])
 
   const openTickets = summary.escalated_count
   const unreadOnTickets = summary.unread_messages
@@ -27,6 +35,14 @@ export default function PlatformAdminPage() {
     await clearStore()
     await signOut()
     router.replace('/login')
+  }
+
+  if (adminLoading || !isPlatformAdmin) {
+    return (
+      <main className="min-h-full bg-gray-100">
+        <CatalogHeader title="Admin" subtitle="Loading…" showSettings={false} />
+      </main>
+    )
   }
 
   return (
@@ -49,17 +65,17 @@ export default function PlatformAdminPage() {
 
         <div className="relative">
           <MenuRow
-            label="Support inbox"
+            label="Admin"
             value={
               openTickets > 0
                 ? `${openTickets} open ticket${openTickets === 1 ? '' : 's'}`
                 : unreadOnTickets > 0
                   ? `${unreadOnTickets} unread message${unreadOnTickets === 1 ? '' : 's'} on tickets`
-                  : 'AiShopy merchant Chat with AI'
+                  : 'Support inbox and merchant users'
             }
-            icon="inbox"
+            icon="cog"
             showChevron
-            onPress={() => router.push('/platform-support-inbox')}
+            onPress={() => router.push('/platform-admin/workspace/support')}
           />
           {unreadOnTickets > 0 ? (
             <div className="absolute right-5 top-3">
