@@ -105,7 +105,7 @@ export default function SettingsPage() {
             value="AiShopy merchant Chat with AI"
             icon="inbox"
             showChevron
-            onPress={() => router.push('/platform-support-inbox')}
+            onPress={() => router.push('/platform-admin/workspace/support')}
           />
           <MenuRow
             label="Create a store"
@@ -239,7 +239,7 @@ export default function SettingsPage() {
                     }
                     icon="inbox"
                     showChevron
-                    onPress={() => router.push('/platform-support-inbox')}
+                    onPress={() => router.push('/platform-admin/workspace/support')}
                   />
                   {unreadOnTickets > 0 ? (
                     <div className="absolute right-5 top-3">

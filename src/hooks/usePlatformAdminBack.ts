@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useCallback } from 'react'
 
 /** Prefer stack back; fall back to Admin home when platform admin has no store. */
-export function usePlatformAdminBack(fallbackHref = '/platform-admin') {
+export function usePlatformAdminBack(fallbackHref = '/platform-admin/workspace/support') {
   const router = useRouter()
   const { store } = useStore()
   const { isPlatformAdmin } = usePlatformAdmin()

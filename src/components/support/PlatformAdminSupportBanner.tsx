@@ -14,7 +14,7 @@ export function PlatformAdminSupportBanner() {
   return (
     <button
       type="button"
-      onClick={() => router.push('/platform-support-inbox')}
+      onClick={() => router.push('/platform-admin/workspace/support')}
       className="mb-3 flex w-full items-center gap-3 rounded-2xl border-2 border-brand-green/40 bg-[#E8F8EC] px-4 py-3 text-left"
     >
       <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-brand-green">

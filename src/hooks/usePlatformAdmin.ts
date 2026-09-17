@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 
 export function usePlatformAdmin() {
   const [isPlatformAdmin, setIsPlatformAdmin] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     let cancelled = false
@@ -15,10 +16,13 @@ export function usePlatformAdmin() {
       .catch(() => {
         if (!cancelled) setIsPlatformAdmin(false)
       })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false)
+      })
     return () => {
       cancelled = true
     }
   }, [])
 
-  return { isPlatformAdmin }
+  return { isPlatformAdmin, isLoading }
 }

@@ -157,7 +157,7 @@ function CreateStoreForm() {
       }
     >
       {isPlatformAdmin ? (
-        <Link href="/products" className="text-[14px] text-brand-green">
+        <Link href="/platform-admin" className="text-[14px] text-brand-green">
           Skip — open Admin home
         </Link>
       ) : null}

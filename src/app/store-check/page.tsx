@@ -57,7 +57,7 @@ export default function StoreCheckPage() {
         hasRoutedRef.current = true
 
         if (list.length === 0) {
-          routerRef.current.replace(isAdmin ? '/products' : '/create-store')
+          routerRef.current.replace(isAdmin ? '/platform-admin' : '/create-store')
           return
         }
 

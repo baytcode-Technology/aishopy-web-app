@@ -39,6 +39,7 @@ const SETTINGS_STACK = [
   '/staff-management',
   '/account-coming-soon',
   '/platform-admin',
+  '/platform-admin/workspace',
   '/connect-whatsapp',
   '/instagram-connect',
   '/website-customize',
@@ -68,6 +69,19 @@ function isChatThreadRoute(pathname: string) {
   if (/^\/inbox\/[^/]+$/.test(pathname)) return true
   if (/^\/platform-support\/[^/]+$/.test(pathname)) return true
   return false
+}
+
+const ADMIN_SHELL_ROUTES = [
+  '/platform-admin',
+  '/platform-support',
+  '/platform-support-inbox',
+  '/create-store',
+]
+
+function isAdminShellRoute(pathname: string) {
+  return ADMIN_SHELL_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
+  )
 }
 
 function AppGate({ children }: { children: ReactNode }) {
@@ -148,6 +162,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const storeName = store?.name ?? sessionStoreName ?? 'AiShopy'
   const hideTabs = isDetailRoute(pathname)
   const chatThread = isChatThreadRoute(pathname)
+  const showMerchantNav = Boolean(store) && !isAdminShellRoute(pathname)
 
   const handleSignOut = async () => {
     await clearStore()
@@ -159,6 +174,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <RequireAuth>
       <AppGate>
         <div className="min-h-screen bg-gray-100 lg:flex lg:h-dvh lg:overflow-hidden">
+          {showMerchantNav ? (
           <aside className="hidden lg:flex lg:h-full lg:w-64 lg:shrink-0 lg:flex-col lg:border-r lg:border-gray-200 lg:bg-surface">
             <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
               <div className="flex min-h-full flex-col">
@@ -212,20 +228,21 @@ export function AppShell({ children }: { children: ReactNode }) {
               </div>
             </div>
           </aside>
+          ) : null}
 
           <div
             className={
               chatThread
                 ? 'flex h-dvh min-h-0 flex-1 flex-col overflow-hidden'
                 : `flex min-h-screen flex-1 flex-col lg:min-h-0 lg:overflow-y-auto ${
-                    hideTabs ? '' : 'pb-24 lg:pb-0'
+                    hideTabs || !showMerchantNav ? '' : 'pb-24 lg:pb-0'
                   }`
             }
           >
             <div className={chatThread ? 'flex min-h-0 flex-1 flex-col' : 'flex-1'}>{children}</div>
           </div>
 
-          {hideTabs ? null : (
+          {hideTabs || !showMerchantNav ? null : (
             <nav className="fixed inset-x-0 bottom-0 z-20 px-5 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 lg:hidden">
               <div className="flex items-center justify-between rounded-[26px] border border-gray-200 bg-surface px-2 py-2 shadow-lg">
                 {NAV.map(({ href, label, Icon }) => {
