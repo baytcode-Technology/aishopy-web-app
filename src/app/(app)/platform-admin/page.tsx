@@ -3,6 +3,7 @@
 import { CatalogHeader } from '@/components/catalog/CatalogHeader'
 import { Button } from '@/components/ui/Button'
 import { MenuRow } from '@/components/ui/MenuRow'
+import { ThemeToggleChip } from '@/components/ui/ThemeToggleChip'
 import { UnreadCountBadge } from '@/components/ui/UnreadCountBadge'
 import { useSupportAdminSummary } from '@/hooks/useSupportAdminSummary'
 import { usePlatformAdmin } from '@/hooks/usePlatformAdmin'
@@ -53,8 +54,11 @@ export default function PlatformAdminPage() {
         showSettings={false}
       />
       <div className="flex flex-col gap-4 px-5 pb-8 pt-2">
-        <div className="rounded-[28px] border border-gray-200 bg-surface px-6 py-5 shadow-sm">
-          <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-gray-400">
+        <div className="relative rounded-[28px] border border-gray-200 bg-surface px-6 py-5 shadow-sm">
+          <div className="absolute right-5 top-5 flex items-center gap-2">
+            <ThemeToggleChip />
+          </div>
+          <p className="mb-2 pr-12 text-[11px] font-bold uppercase tracking-[0.2em] text-gray-400">
             Signed in
           </p>
           <p className="text-[15px] text-gray-500">{user?.email ?? 'Admin account'}</p>
