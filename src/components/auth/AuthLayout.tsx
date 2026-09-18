@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { AppLogo } from '@/components/brand/AppLogo'
+import { Heading } from '@/components/ui/Typography'
 
 type Props = {
   title: string
@@ -15,9 +16,9 @@ export function AuthLayout({ title, subtitle, children, footer }: Props) {
         <div className="mb-2.5 flex justify-center">
           <AppLogo />
         </div>
-        <h1 className="mb-2 text-center text-2xl font-semibold tracking-tight text-ink">
+        <Heading as="h1" className="mb-2 text-center">
           {title}
-        </h1>
+        </Heading>
         <p className="mb-7 text-center text-[13px] leading-[22px] text-gray-500">
           {subtitle}
         </p>

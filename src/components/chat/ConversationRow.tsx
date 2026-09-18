@@ -1,5 +1,6 @@
 'use client'
 
+import { Caption, Muted } from '@/components/ui/Typography'
 import { MenuIcon } from '@/components/ui/MenuIcons'
 import { UnreadCountBadge } from '@/components/ui/UnreadCountBadge'
 import type { ChatChannel, ChatListItem } from '@/core/types/chat'
@@ -38,15 +39,21 @@ export function ConversationRow({ conversation, onPress }: Props) {
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex items-center justify-between">
           <div className="mr-2 flex min-w-0 flex-1 items-center gap-1.5">
-            <p className="flex-1 truncate text-base font-bold text-ink">{conversation.title}</p>
+            <p className="flex-1 truncate text-[15px] font-semibold leading-tight text-ink">
+              {conversation.title}
+            </p>
             {conversation.aiHandling ? (
               <MenuIcon name="magic" className="h-3 w-3 shrink-0 text-brand-primary" />
             ) : null}
           </div>
-          <p className="shrink-0 text-[12px] font-medium text-gray-500">{conversation.time}</p>
+          <Caption as="p" className="shrink-0">
+            {conversation.time}
+          </Caption>
         </div>
         <div className="flex items-center gap-2">
-          <p className="flex-1 truncate text-[14px] text-gray-500">{conversation.subtitle}</p>
+          <Muted as="p" className="flex-1 truncate">
+            {conversation.subtitle}
+          </Muted>
           {conversation.unread > 0 ? <UnreadCountBadge count={conversation.unread} /> : null}
         </div>
       </div>

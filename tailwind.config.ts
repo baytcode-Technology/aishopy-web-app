@@ -8,6 +8,20 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: [
+          '-apple-system',
+          'BlinkMacSystemFont',
+          '"Segoe UI"',
+          'Roboto',
+          '"Helvetica Neue"',
+          'Arial',
+          'sans-serif',
+        ],
+      },
+      letterSpacing: {
+        brand: '0.35em',
+      },
       colors: {
         ink: {
           DEFAULT: 'var(--color-ink)',

@@ -3,6 +3,7 @@
 import { HeaderOverflow } from '@/components/catalog/HeaderOverflow'
 import { SettingsHeaderButton } from '@/components/catalog/SettingsHeaderButton'
 import { AppLogo } from '@/components/brand/AppLogo'
+import { Heading, Subtitle } from '@/components/ui/Typography'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 
@@ -23,14 +24,21 @@ export function CatalogHeader({
   backHref,
   showSettings = true,
 }: Props) {
+  const showBack = Boolean(onBack || backHref)
+
   return (
     <header className="bg-surface px-5 pb-3 pt-1">
-      <div className="mb-2 hidden justify-center max-lg:flex">
-        <AppLogo href="" />
-      </div>
-      <div className="flex items-start justify-between gap-3">
+      <div className="relative">
+        {!showBack ? (
+          <div className="pointer-events-none absolute left-0 right-0 top-0 hidden justify-center max-lg:flex">
+            <AppLogo href="" />
+          </div>
+        ) : null}
+        <div
+          className={`flex items-start justify-between gap-3 ${!showBack ? 'max-lg:mt-5' : ''}`}
+        >
           <div className="min-w-0 flex-1 pr-3">
-            {onBack || backHref ? (
+            {showBack ? (
               backHref ? (
                 <Link
                   href={backHref}
@@ -48,16 +56,15 @@ export function CatalogHeader({
                 </button>
               )
             ) : null}
-            <h1 className="text-2xl font-semibold tracking-tight text-ink">{title}</h1>
-            {subtitle ? (
-              <p className="mt-1.5 text-[14px] font-medium leading-5 text-gray-500">{subtitle}</p>
-            ) : null}
+            <Heading as="h1">{title}</Heading>
+            {subtitle ? <Subtitle className="mt-1.5">{subtitle}</Subtitle> : null}
           </div>
           <div className="flex shrink-0 items-center gap-2 pt-0.5">
             {right}
             {showSettings ? <SettingsHeaderButton /> : null}
             <HeaderOverflow />
           </div>
+        </div>
       </div>
     </header>
   )

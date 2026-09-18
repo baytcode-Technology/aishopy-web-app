@@ -2,6 +2,7 @@
 
 import { CatalogHeader } from '@/components/catalog/CatalogHeader'
 import { MenuIcon, type MenuIconName } from '@/components/ui/MenuIcons'
+import { Heading } from '@/components/ui/Typography'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 
@@ -176,9 +177,9 @@ function AccountComingSoonBody() {
           <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-gray-200 bg-gray-100 text-brand-primary">
             <MenuIcon name={feature.icon} className="h-7 w-7" />
           </div>
-          <h2 className="mb-3 text-center text-2xl font-semibold tracking-tight text-ink">
+          <Heading as="h2" className="mb-3 text-center">
             Coming soon
-          </h2>
+          </Heading>
           <p className="max-w-[300px] text-center text-[15px] leading-6 text-gray-500">
             {feature.description}
           </p>

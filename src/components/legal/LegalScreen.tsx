@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { AppLogo } from '@/components/brand/AppLogo'
+import { Title } from '@/components/ui/Typography'
 
 export function LegalSection({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -25,7 +26,9 @@ export function LegalScreen({
   return (
     <main className="mx-auto min-h-screen max-w-2xl px-6 py-12">
       <AppLogo />
-      <h1 className="mt-8 text-3xl font-semibold tracking-tight">{title}</h1>
+      <Title as="h1" className="mt-8">
+        {title}
+      </Title>
       <p className="mt-2 text-gray-500">{subtitle}</p>
       <p className="mt-1 text-xs text-gray-400">Last updated {lastUpdated}</p>
       <div className="mt-8">{children}</div>
