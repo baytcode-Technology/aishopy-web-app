@@ -70,7 +70,10 @@ function pathFromNotificationData(data) {
     const id = data.conversationId
     if (id != null && String(id).trim()) {
       const chatChannel = channel || 'whatsapp'
-      return `/inbox/${encodeURIComponent(String(id))}?channel=${encodeURIComponent(chatChannel)}`
+      const params = new URLSearchParams({ channel: chatChannel })
+      const phone = typeof data.phone === 'string' ? data.phone.trim() : ''
+      if (phone) params.set('phone', phone)
+      return `/inbox/${encodeURIComponent(String(id))}?${params.toString()}`
     }
     return '/inbox'
   }

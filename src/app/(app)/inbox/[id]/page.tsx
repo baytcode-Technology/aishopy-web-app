@@ -18,6 +18,8 @@ import { SupportKeyboardChatLayout } from '@/components/support/SupportKeyboardC
 import { MenuIcon } from '@/components/ui/MenuIcons'
 import {
   fetchChatMessages,
+  fetchChats,
+  fetchInstagramChats,
   fetchInstagramMessages,
   forwardInstagramMessage,
   forwardWhatsAppMessage,
@@ -127,7 +129,7 @@ function InboxThreadPageInner() {
   } = useChatSocket()
 
   const conversationId = Number(params.id)
-  const customerPhone = searchParams.get('phone') ?? ''
+  const phoneFromQuery = (searchParams.get('phone') ?? '').trim()
   const channel: ChatChannel = searchParams.get('channel') === 'instagram' ? 'instagram' : 'whatsapp'
   const displayName = searchParams.get('displayName')
   const unreadRaw = searchParams.get('unread') ?? '0'
@@ -151,6 +153,8 @@ function InboxThreadPageInner() {
   const [customerDisplayName, setCustomerDisplayName] = useState<string | null>(
     displayName?.trim() || null,
   )
+  const [recipient, setRecipient] = useState(phoneFromQuery)
+  const [recipientReady, setRecipientReady] = useState(Boolean(phoneFromQuery))
   const [replyModeBusy, setReplyModeBusy] = useState(false)
   const [aiPreparingReply, setAiPreparingReply] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
@@ -169,7 +173,64 @@ function InboxThreadPageInner() {
 
   const unreadCount = Number.isFinite(Number(unreadRaw)) && Number(unreadRaw) > 0 ? Number(unreadRaw) : 0
   const initialLimit = Math.max(INITIAL_MESSAGE_LIMIT, unreadCount)
-  const headerLabel = displayName?.trim() || customerPhone
+  const headerLabel = displayName?.trim() || recipient
+
+  useEffect(() => {
+    if (!store?.id || !Number.isFinite(conversationId)) return
+
+    if (phoneFromQuery) {
+      setRecipient(phoneFromQuery)
+      setRecipientReady(true)
+      return
+    }
+
+    let cancelled = false
+    setRecipient('')
+    setRecipientReady(false)
+
+    void (async () => {
+      try {
+        if (channel === 'instagram') {
+          const res = await fetchInstagramChats(store.id)
+          if (cancelled) return
+          const chat = res.data.chats.find((c) => c.id === conversationId)
+          const igId = chat?.customer_ig_id?.trim() ?? ''
+          if (!igId) {
+            setNotice('Could not load this conversation recipient')
+            return
+          }
+          setRecipient(igId)
+          if (chat?.customer_ig_username?.trim()) {
+            setCustomerDisplayName((prev) => prev || `@${chat.customer_ig_username!.replace(/^@/, '')}`)
+          }
+          setRecipientReady(true)
+          return
+        }
+
+        const res = await fetchChats(store.id)
+        if (cancelled) return
+        const chat = res.data.chats.find((c) => c.id === conversationId)
+        const waNumber = chat?.customer_wa_number?.trim() ?? ''
+        if (!waNumber) {
+          setNotice('Could not load this conversation recipient')
+          return
+        }
+        setRecipient(waNumber)
+        if (chat?.customer_name?.trim()) {
+          setCustomerDisplayName((prev) => prev || chat.customer_name!.trim())
+        }
+        setRecipientReady(true)
+      } catch (e: unknown) {
+        if (!cancelled) {
+          setNotice(getErrorMessage(e, 'Could not load conversation recipient'))
+        }
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [store?.id, conversationId, channel, phoneFromQuery])
 
   const scrollToBottom = useCallback(() => {
     const el = listRef.current
@@ -268,12 +329,12 @@ function InboxThreadPageInner() {
         if (label.startsWith('@')) return label
         if (!/^\d+$/.test(label)) return label
       }
-      const igId = customerPhone.trim()
+      const igId = recipient.trim()
       if (!igId) return 'Instagram'
       return igId.length > 12 ? `IG ${igId.slice(0, 8)}…` : igId
     }
-    return customerDisplayName || headerLabel || customerPhone || 'Chat'
-  }, [channel, customerDisplayName, customerPhone, headerLabel])
+    return customerDisplayName || headerLabel || recipient || 'Chat'
+  }, [channel, customerDisplayName, recipient, headerLabel])
 
   const instagramSubtitle = useMemo(() => {
     const label = customerDisplayName?.trim() || headerLabel.trim()
@@ -510,6 +571,12 @@ function InboxThreadPageInner() {
   }
 
   const sendOneMediaMessage = async (payload: OutboundMediaPayload, tempIdOffset = 0) => {
+    const to = recipient.trim()
+    if (!to) {
+      setNotice('Conversation recipient not ready')
+      throw new Error('Conversation recipient not ready')
+    }
+
     const tempId = -(Date.now() + tempIdOffset)
     const clientKey = `client-${tempId}`
     const now = new Date()
@@ -543,7 +610,7 @@ function InboxThreadPageInner() {
         })
         const res = await sendInstagramMediaMessage({
           storeId: store!.id,
-          to: customerPhone,
+          to,
           conversationId,
           type: payload.type,
           mediaUrl: uploaded.data.media_url,
@@ -572,7 +639,7 @@ function InboxThreadPageInner() {
         })
         const res = await sendWhatsAppMediaMessage({
           storeId: store!.id,
-          to: customerPhone,
+          to,
           conversationId,
           type: payload.type,
           mediaId: uploaded.data.media_id,
@@ -598,6 +665,10 @@ function InboxThreadPageInner() {
 
   const sendMediaMessage = async (payload: OutboundMediaPayload | OutboundMediaPayload[]) => {
     if (!store?.id || isSendingMedia) return
+    if (!recipientReady || !recipient.trim()) {
+      setNotice('Conversation recipient not ready')
+      return
+    }
     const payloads = Array.isArray(payload) ? payload : [payload]
     if (!payloads.length) return
     setIsSendingMedia(true)
@@ -613,7 +684,12 @@ function InboxThreadPageInner() {
   const sendTextMessage = useCallback(
     async (text: string) => {
       const trimmed = text.trim()
+      const to = recipient.trim()
       if (!trimmed || !store?.id) return
+      if (!recipientReady || !to) {
+        setNotice('Conversation recipient not ready')
+        return
+      }
       clientKeyCounterRef.current += 1
       const tempId = -(Date.now() + clientKeyCounterRef.current)
       const clientKey = `client-${tempId}`
@@ -638,7 +714,7 @@ function InboxThreadPageInner() {
       try {
         const res = await sendChatMessage({
           storeId: store.id,
-          to: customerPhone,
+          to,
           message: trimmed,
           conversationId,
           channel,
@@ -657,7 +733,7 @@ function InboxThreadPageInner() {
         throw e
       }
     },
-    [store?.id, customerPhone, conversationId, channel, triggerAutoScroll],
+    [store?.id, recipient, recipientReady, conversationId, channel, triggerAutoScroll],
   )
 
   const sendProductShare = async (payload: ProductShareSendPayload) => {
@@ -773,7 +849,11 @@ function InboxThreadPageInner() {
             {title}
           </p>
           <p className="mt-0.5 truncate text-xs text-gray-400">
-            {isLoading ? 'Loading…' : channel === 'instagram' ? instagramSubtitle : customerPhone}
+            {isLoading || !recipientReady
+              ? 'Loading…'
+              : channel === 'instagram'
+                ? instagramSubtitle
+                : recipient}
           </p>
         </div>
         <SettingsHeaderButton />
