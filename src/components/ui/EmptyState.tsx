@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Body, Heading } from '@/components/ui/Typography'
 
 type EmptyIcon = 'inbox' | 'shopping-cart' | 'search'
 
@@ -46,11 +47,13 @@ export function EmptyState({
       <div className="mb-6 flex h-[72px] w-[72px] items-center justify-center rounded-[22px] border border-gray-200 bg-surface shadow-sm">
         <EmptyIconMark icon={icon} />
       </div>
-      <h2 className="text-center text-2xl font-semibold tracking-tight text-ink">{title}</h2>
+      <Heading as="h2" className="text-center">
+        {title}
+      </Heading>
       {description ? (
-        <p className="mt-3 max-w-[300px] text-center text-[15px] leading-6 text-gray-500">
+        <Body as="p" className="mt-3 max-w-[300px] text-center text-gray-500">
           {description}
-        </p>
+        </Body>
       ) : null}
       {action ? <div className="mt-8 w-full max-w-xs">{action}</div> : null}
     </div>

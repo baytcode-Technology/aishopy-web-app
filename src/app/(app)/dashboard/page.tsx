@@ -2,6 +2,7 @@
 
 import { CatalogHeader } from '@/components/catalog/CatalogHeader'
 import { StoreAvatar } from '@/components/store/StoreAvatar'
+import { Heading } from '@/components/ui/Typography'
 import { fetchCategories } from '@/core/api/categories'
 import { fetchAllChats } from '@/core/api/chats'
 import { fetchOrders } from '@/core/api/orders'
@@ -98,9 +99,7 @@ export default function DashboardPage() {
           <div className="mb-5 flex items-center gap-4">
             <StoreAvatar store={store} size="sm" />
             <div className="flex-1">
-              <h2 className="text-2xl font-semibold tracking-tight text-ink">
-                {store?.name ?? 'Your store'}
-              </h2>
+              <Heading as="h2">{store?.name ?? 'Your store'}</Heading>
             </div>
           </div>
 

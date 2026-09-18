@@ -12,6 +12,7 @@ import { MenuIcon } from '@/components/ui/MenuIcons'
 import { MenuRow } from '@/components/ui/MenuRow'
 import { ThemeToggleChip } from '@/components/ui/ThemeToggleChip'
 import { UnreadCountBadge } from '@/components/ui/UnreadCountBadge'
+import { Heading } from '@/components/ui/Typography'
 import { env } from '@/core/config/env'
 import { buildSubdomainUrl } from '@/core/lib/storefront'
 import { getPlanLabel, getStorePlan } from '@/core/lib/subscription'
@@ -148,9 +149,9 @@ export default function SettingsPage() {
                 <StoreLogoEditLink onPress={() => setLogoOpen(true)} />
               </div>
 
-              <h2 className="pr-16 text-2xl font-semibold tracking-tight text-ink">
+              <Heading as="h2" className="pr-16">
                 {store?.name ?? 'Your store'}
-              </h2>
+              </Heading>
               {user?.email ? (
                 <p className="mt-2 text-[15px] text-gray-500">{user.email}</p>
               ) : null}

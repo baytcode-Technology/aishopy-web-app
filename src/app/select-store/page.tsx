@@ -4,6 +4,7 @@ import { RequireAuth } from '@/components/auth/RequireAuth'
 import { AppLogo } from '@/components/brand/AppLogo'
 import { StorePickerList } from '@/components/store/StorePickerList'
 import { Button } from '@/components/ui/Button'
+import { Heading } from '@/components/ui/Typography'
 import { getStoreSession, normalizeStoreSession } from '@/platform/store-storage'
 import { useAuth } from '@/providers/auth-provider'
 import { useStore } from '@/providers/store-provider'
@@ -53,9 +54,9 @@ function SelectStoreContent() {
     <main className="mx-auto flex min-h-screen max-w-lg flex-col bg-gray-100 px-5 py-14">
       <div className="mb-8 flex flex-col items-center">
         <AppLogo />
-        <h1 className="mt-6 text-center text-2xl font-semibold tracking-tight">
+        <Heading as="h1" className="mt-6 text-center">
           Choose a workspace
-        </h1>
+        </Heading>
         <p className="mt-2 px-4 text-center text-[15px] leading-6 text-gray-500">
           Which store do you want to open? You can switch anytime from Storefront in Settings.
         </p>
