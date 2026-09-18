@@ -20,6 +20,7 @@ export const endpoints = {
   paymentConfigRazorpayVerifyTest: '/api/stores/me/payment-config/razorpay/verify-test',
   notificationPreferences: '/api/stores/me/notification-preferences',
   pushToken: '/api/stores/me/push-token',
+  webPushSubscription: '/api/stores/me/web-push-subscription',
   products: '/api/products',
   categories: '/api/categories',
   industries: '/api/industries',

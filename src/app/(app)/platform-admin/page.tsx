@@ -7,6 +7,7 @@ import { ThemeToggleChip } from '@/components/ui/ThemeToggleChip'
 import { UnreadCountBadge } from '@/components/ui/UnreadCountBadge'
 import { useSupportAdminSummary } from '@/hooks/useSupportAdminSummary'
 import { usePlatformAdmin } from '@/hooks/usePlatformAdmin'
+import { unregisterStoredWebPushOnSignOut } from '@/core/lib/web-push'
 import { useAuth } from '@/providers/auth-provider'
 import { useStore } from '@/providers/store-provider'
 import { useRouter } from 'next/navigation'
@@ -15,7 +16,7 @@ import { useEffect } from 'react'
 export default function PlatformAdminPage() {
   const router = useRouter()
   const { user, signOut } = useAuth()
-  const { clearStore } = useStore()
+  const { store, sessionStoreId, clearStore } = useStore()
   const { isPlatformAdmin, isLoading: adminLoading } = usePlatformAdmin()
   const { summary, refresh } = useSupportAdminSummary(true)
 
@@ -33,6 +34,7 @@ export default function PlatformAdminPage() {
   const unreadOnTickets = summary.unread_messages
 
   const handleSignOut = async () => {
+    await unregisterStoredWebPushOnSignOut(store?.id ?? sessionStoreId)
     await clearStore()
     await signOut()
     router.replace('/login')

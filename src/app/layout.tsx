@@ -1,10 +1,17 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { AppProviders } from '@/providers/app-providers'
 import './globals.css'
 
 export const metadata: Metadata = {
   title: 'AiShopy',
   description: 'Merchant dashboard for AiShopy. Manage your store in the browser.',
+  applicationName: 'AiShopy',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    title: 'AiShopy',
+    statusBarStyle: 'default',
+  },
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
@@ -17,6 +24,10 @@ export const metadata: Metadata = {
     apple: { url: '/apple-touch-icon.png', sizes: '180x180' },
     shortcut: '/favicon.ico',
   },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#0a0a0b',
 }
 
 export default function RootLayout({

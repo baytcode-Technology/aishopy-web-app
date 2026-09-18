@@ -5,6 +5,7 @@ const storefrontBaseDomain =
 const storefrontPreviewBaseUrl =
   process.env.NEXT_PUBLIC_STOREFRONT_PREVIEW_BASE_URL?.trim() || `https://${storefrontBaseDomain}`
 const googleWebClientId = process.env.NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID?.trim() ?? ''
+const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim() ?? ''
 
 export const env = {
   apiBaseUrl,
@@ -12,6 +13,7 @@ export const env = {
   storefrontBaseDomain,
   storefrontPreviewBaseUrl,
   googleWebClientId,
+  vapidPublicKey,
 } as const
 
 export function getGoogleRedirectUri(): string {
