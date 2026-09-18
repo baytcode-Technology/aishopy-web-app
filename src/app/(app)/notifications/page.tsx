@@ -28,10 +28,10 @@ function notificationSettingsErrorMessage(error: unknown, fallback: string): str
   if (message.includes('notification_preferences')) {
     return 'Database update required: run migration 021_notification_preferences.sql on Supabase, then try again.'
   }
-  if (message.includes('store_web_push_subscriptions')) {
+  if (message.includes('store_web_push_subscriptions') || message.includes('WEB_PUSH_UPSERT_FAILED')) {
     return 'Database update required: run migration 059_store_web_push_subscriptions.sql on Supabase, then try again.'
   }
-  return fallback
+  return message || fallback
 }
 
 function supportHint(status: WebPushSupportStatus): string {
