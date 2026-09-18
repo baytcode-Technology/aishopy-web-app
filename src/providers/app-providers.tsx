@@ -7,6 +7,7 @@ import { OrdersUnreadProvider } from '@/providers/orders-unread-provider'
 import { SupportUnreadProvider } from '@/providers/support-unread-provider'
 import { StoreProvider } from '@/providers/store-provider'
 import { ThemeProvider } from '@/providers/theme-provider'
+import { WebPushLifecycle } from '@/components/notifications/WebPushLifecycle'
 import type { ReactNode } from 'react'
 
 export function AppProviders({ children }: { children: ReactNode }) {
@@ -14,6 +15,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
     <ThemeProvider>
       <AuthProvider>
         <StoreProvider>
+          <WebPushLifecycle />
           <ChatSocketProvider>
             <ChatsUnreadProvider>
               <SupportUnreadProvider>

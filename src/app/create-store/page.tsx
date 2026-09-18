@@ -11,6 +11,7 @@ import { fetchSupportAdminStatus } from '@/core/api/support'
 import { env } from '@/core/config/env'
 import { CURRENCY_OPTIONS } from '@/core/data/currencies'
 import { getApiErrorCode, getErrorMessage } from '@/core/lib/api-error'
+import { unregisterStoredWebPushOnSignOut } from '@/core/lib/web-push'
 import {
   COUNTRY_OPTIONS,
   DEFAULT_COUNTRY,
@@ -38,7 +39,7 @@ const CONTACT_TAKEN_HELPER =
 
 function CreateStoreForm() {
   const { signOut } = useAuth()
-  const { activateStoreSession, clearStore, refreshStores } = useStore()
+  const { activateStoreSession, clearStore, refreshStores, sessionStoreId, store } = useStore()
   const router = useRouter()
   const [name, setName] = useState('')
   const [whatsappNumber, setWhatsappNumber] = useState('')
@@ -84,6 +85,7 @@ function CreateStoreForm() {
   }
 
   const handleSignOut = async () => {
+    await unregisterStoredWebPushOnSignOut(store?.id ?? sessionStoreId)
     await clearStore()
     await signOut()
     router.replace('/login')
