@@ -37,15 +37,15 @@ function notificationSettingsErrorMessage(error: unknown, fallback: string): str
 function supportHint(status: WebPushSupportStatus): string {
   switch (status) {
     case 'unsupported':
-      return 'This browser does not support web push notifications.'
+      return 'This browser cannot receive web push in a normal tab. On iPhone/iPad, install AiShopy (Share → Add to Home Screen) and open it from the home screen to enable alerts.'
     case 'missing_vapid':
       return 'Browser push is not configured on this deployment yet (missing VAPID public key).'
     case 'denied':
-      return 'Notifications are blocked. Allow them in your browser site settings, then try again.'
+      return 'Notifications are blocked for this site. Open your browser site settings, allow Notifications for AiShopy, then return here and try Enable again.'
     case 'granted':
       return 'Browser alerts are allowed. Keep this enabled to receive chat and order pushes here.'
     default:
-      return 'Enable browser alerts to get chat and order notifications while using AiShopy in this browser or as an installed app.'
+      return 'Enable browser alerts to get chat and order notifications while using AiShopy in this browser or as an installed app. On iPhone, install the app first (Share → Add to Home Screen).'
   }
 }
 
@@ -222,19 +222,21 @@ export default function NotificationsPage() {
               {installed ? (
                 <p className="text-[13px] leading-5 text-gray-500">
                   AiShopy is installed on this device. Background alerts work best from the
-                  installed app.
+                  installed app. On iPhone, open AiShopy from the home screen to receive pushes.
                 </p>
               ) : canInstall ? (
                 <>
                   <p className="text-[13px] leading-5 text-gray-500">
                     Install AiShopy for quicker access and better background notification delivery.
+                    On iPhone, install is required for alerts.
                   </p>
                   <Button label="Install AiShopy" variant="outline" onClick={() => void handleInstall()} />
                 </>
               ) : (
                 <p className="text-[13px] leading-5 text-gray-500">
                   On desktop Chrome/Edge, use the install icon in the address bar when available. On
-                  iPhone/iPad Safari: Share → Add to Home Screen.
+                  iPhone/iPad Safari: Share → Add to Home Screen (required for push alerts), then
+                  open AiShopy from the home screen.
                 </p>
               )}
             </div>
