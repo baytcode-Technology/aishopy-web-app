@@ -34,7 +34,7 @@ export function EditStoreModal({ open, store, onClose, onUpdated }: Props) {
   const [description, setDescription] = useState('')
   const [phoneNumber, setPhoneNumber] = useState('')
   const [country, setCountry] = useState<CountryValue>(DEFAULT_COUNTRY)
-  const [currency, setCurrency] = useState('USD')
+  const [currency, setCurrency] = useState(() => defaultCurrencyForCountry(DEFAULT_COUNTRY.cca2))
   const [currencyTouched, setCurrencyTouched] = useState(false)
   const [logoImage, setLogoImage] = useState<PickedLogo | null>(null)
   const [loading, setLoading] = useState(false)

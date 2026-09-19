@@ -8,7 +8,7 @@ export function formatE164(callingCode: string, national: string): string {
 
 export function parseE164Phone(
   value: string,
-  fallbackCode = 'US',
+  fallbackCode = 'IN',
 ): { countryCode: string; callingCode: string; national: string } {
   const fallbackCalling = COUNTRY_DIAL_CODES[fallbackCode] ?? '1'
   const cleaned = value.trim()

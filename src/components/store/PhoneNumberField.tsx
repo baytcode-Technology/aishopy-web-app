@@ -23,8 +23,8 @@ export function PhoneNumberField({
   resetKey,
 }: Props) {
   const [pickerOpen, setPickerOpen] = useState(false)
-  const [selectedCode, setSelectedCode] = useState('US')
-  const [callingCode, setCallingCode] = useState('1')
+  const [selectedCode, setSelectedCode] = useState('IN')
+  const [callingCode, setCallingCode] = useState('91')
   const [nationalNumber, setNationalNumber] = useState('')
 
   useEffect(() => {
