@@ -170,11 +170,6 @@ export async function unregisterStoredWebPushOnSignOut(storeId: number | null): 
   } catch {
     /* ignore */
   }
-  try {
-    const subscription = await getCurrentPushSubscription()
-    if (subscription) await subscription.unsubscribe()
-  } catch {
-    /* ignore */
-  }
+  // Keep the browser PushSubscription so re-login can sync without re-Enable.
   storeEndpoint(null)
 }

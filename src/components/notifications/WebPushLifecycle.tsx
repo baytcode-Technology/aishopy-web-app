@@ -1,5 +1,6 @@
 'use client'
 
+import { NotificationNavigateListener } from '@/components/notifications/NotificationNavigateListener'
 import {
   registerServiceWorker,
   syncBrowserPushIfGranted,
@@ -23,5 +24,5 @@ export function WebPushLifecycle() {
     void syncBrowserPushIfGranted(store.id)
   }, [isAuthenticated, store?.id])
 
-  return null
+  return <NotificationNavigateListener />
 }
