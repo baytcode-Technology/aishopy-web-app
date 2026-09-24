@@ -75,4 +75,5 @@ export const endpoints = {
     `/api/support/admin/conversations/${conversationId}/read`,
   platformAdminUsers: '/api/platform-admin/users',
   platformAdminUser: (userId: string) => `/api/platform-admin/users/${userId}`,
+  platformAdminWebPushSubscription: '/api/platform-admin/web-push-subscription',
 } as const

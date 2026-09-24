@@ -24,12 +24,18 @@ self.addEventListener('push', (event) => {
     }
   }
 
+  const data = payload.data && typeof payload.data === 'object' ? payload.data : {}
+  const tag = typeof data.tag === 'string' && data.tag.trim() ? data.tag.trim() : undefined
+  const important = data.important === '1' || data.important === true
+
   event.waitUntil(
     self.registration.showNotification(payload.title, {
       body: payload.body,
       icon: '/icon-192.png',
       badge: '/favicon-48.png',
-      data: payload.data,
+      data,
+      ...(tag ? { tag, renotify: true } : {}),
+      requireInteraction: important,
     })
   )
 })
@@ -88,6 +94,18 @@ function absoluteUrl(path) {
 function pathFromNotificationData(data) {
   const type = typeof data.type === 'string' ? data.type : ''
   const channel = typeof data.channel === 'string' ? data.channel : ''
+
+  if (type === 'ticket_raised' || type === 'support_message') {
+    const id = data.conversationId
+    if (id != null && String(id).trim()) {
+      return `/platform-support/${encodeURIComponent(String(id))}`
+    }
+    return '/platform-admin/workspace/support'
+  }
+
+  if (type === 'user_signed_up') {
+    return '/platform-admin/workspace/users'
+  }
 
   if (type === 'support' || channel === 'support') {
     return '/help-center'
