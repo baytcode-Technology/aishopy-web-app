@@ -1,6 +1,6 @@
 'use client'
 
-import { AdminAlertsEnableCard } from '@/components/admin/AdminAlertsEnableCard'
+import { AdminAlertsToggle } from '@/components/admin/AdminAlertsToggle'
 import { AppLogo } from '@/components/brand/AppLogo'
 import { MenuIcon } from '@/components/ui/MenuIcons'
 import { UnreadCountBadge } from '@/components/ui/UnreadCountBadge'
@@ -36,57 +36,59 @@ export function AdminWorkspaceShell({ children }: Props) {
   const unreadOnTickets = summary.unread_messages
 
   return (
-    <div className="min-h-full bg-gray-100 lg:flex lg:h-full lg:min-h-0 lg:overflow-hidden">
+    <div className="min-h-screen bg-gray-100 lg:flex lg:h-dvh lg:overflow-hidden">
       <aside className="hidden lg:flex lg:h-full lg:w-64 lg:shrink-0 lg:flex-col lg:border-r lg:border-gray-200 lg:bg-surface">
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-          <div className="px-5 pb-2 pt-6">
-            <AppLogo />
-            <p className="mt-5 text-[11px] font-bold uppercase tracking-[0.16em] text-gray-400">
-              Platform admin
-            </p>
-            <p className="mt-1 text-[15px] font-semibold text-ink">AiShopy support</p>
-          </div>
-          <nav className="mt-4 flex flex-1 flex-col gap-1 px-3">
-            {NAV.map(({ href, label, icon }) => {
-              const active = isActive(pathname, href)
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`flex items-center gap-3 rounded-2xl px-3 py-3 text-[14px] font-semibold ${
-                    active ? 'bg-gray-100 text-ink' : 'text-gray-500 hover:bg-gray-50 hover:text-ink'
-                  }`}
-                >
-                  <span className="relative">
-                    <MenuIcon
-                      name={icon}
-                      className={`h-5 w-5 ${active ? 'text-ink' : 'text-gray-400'}`}
-                    />
-                    {href.includes('/support') && unreadOnTickets > 0 ? (
-                      <UnreadCountBadge count={unreadOnTickets} className="absolute -right-2 -top-1" />
-                    ) : null}
-                  </span>
-                  {label}
-                </Link>
-              )
-            })}
-          </nav>
-          <div className="mt-auto border-t border-gray-200 px-3 py-4">
-            <AdminAlertsEnableCard />
-            <Link
-              href="/platform-admin"
-              className="mt-1 block rounded-2xl px-3 py-2.5 text-[13px] font-semibold text-gray-500 hover:bg-gray-50"
-            >
-              Back to admin home
-            </Link>
+          <div className="flex min-h-full flex-col">
+            <div className="px-5 pb-2 pt-6">
+              <AppLogo />
+              <p className="mt-5 text-[11px] font-bold uppercase tracking-[0.16em] text-gray-400">
+                Platform admin
+              </p>
+              <p className="mt-1 text-[15px] font-semibold text-ink">AiShopy support</p>
+            </div>
+            <nav className="mt-4 flex flex-1 flex-col gap-1 px-3">
+              {NAV.map(({ href, label, icon }) => {
+                const active = isActive(pathname, href)
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    className={`flex items-center gap-3 rounded-2xl px-3 py-3 text-[14px] font-semibold ${
+                      active ? 'bg-gray-100 text-ink' : 'text-gray-500 hover:bg-gray-50 hover:text-ink'
+                    }`}
+                  >
+                    <span className="relative">
+                      <MenuIcon
+                        name={icon}
+                        className={`h-5 w-5 ${active ? 'text-ink' : 'text-gray-400'}`}
+                      />
+                      {href.includes('/support') && unreadOnTickets > 0 ? (
+                        <UnreadCountBadge
+                          count={unreadOnTickets}
+                          className="absolute -right-2 -top-1"
+                        />
+                      ) : null}
+                    </span>
+                    {label}
+                  </Link>
+                )
+              })}
+            </nav>
+            <div className="mt-auto flex flex-col gap-1 border-t border-gray-200 px-3 py-4">
+              <AdminAlertsToggle variant="row" />
+              <Link
+                href="/platform-admin"
+                className="rounded-2xl px-3 py-2.5 text-[13px] font-semibold text-gray-500 hover:bg-gray-50"
+              >
+                Back to admin home
+              </Link>
+            </div>
           </div>
         </div>
       </aside>
 
-      <div className="flex min-h-full flex-1 flex-col pb-24 lg:min-h-0 lg:overflow-y-auto lg:pb-0">
-        <div className="lg:hidden">
-          <AdminAlertsEnableCard />
-        </div>
+      <div className="flex min-h-screen flex-1 flex-col pb-24 lg:min-h-0 lg:overflow-y-auto lg:pb-0">
         {children}
       </div>
 
