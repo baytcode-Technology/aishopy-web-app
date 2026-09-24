@@ -139,28 +139,40 @@ export function PlatformSupportInboxContent({ onBack }: Props) {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const load = useCallback(async (refresh = false) => {
-    if (refresh) setIsRefreshing(true)
-    else setIsLoading(true)
-    setError(null)
+  const load = useCallback(async (opts?: { refresh?: boolean; silent?: boolean }) => {
+    const silent = opts?.silent === true
+    const refresh = opts?.refresh === true
+    if (!silent) {
+      if (refresh) setIsRefreshing(true)
+      else setIsLoading(true)
+      setError(null)
+    }
     try {
       const res = await fetchSupportAdminConversations()
       setItems(res.data.conversations)
     } catch (e: unknown) {
-      setError(getErrorMessage(e, 'Failed to load support inbox'))
+      if (!silent) setError(getErrorMessage(e, 'Failed to load support inbox'))
     } finally {
-      setIsLoading(false)
-      setIsRefreshing(false)
+      if (!silent) {
+        setIsLoading(false)
+        setIsRefreshing(false)
+      }
     }
   }, [])
 
   useEffect(() => {
     void load()
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === 'visible') void load({ silent: true })
+    }, 5000)
     const onVisibility = () => {
-      if (document.visibilityState === 'visible') void load()
+      if (document.visibilityState === 'visible') void load({ silent: true })
     }
     document.addEventListener('visibilitychange', onVisibility)
-    return () => document.removeEventListener('visibilitychange', onVisibility)
+    return () => {
+      window.clearInterval(interval)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
   }, [load])
 
   const ticketItems = useMemo(() => items.filter((item) => isOpenTicket(item)), [items])
@@ -200,7 +212,7 @@ export function PlatformSupportInboxContent({ onBack }: Props) {
           right={
             <button
               type="button"
-              onClick={() => void load(true)}
+              onClick={() => void load({ refresh: true })}
               disabled={isRefreshing}
               className="flex h-10 w-10 items-center justify-center rounded-full"
               aria-label="Refresh"

@@ -5,6 +5,7 @@ import {
   disablePlatformAdminBrowserPush,
   enablePlatformAdminBrowserPush,
   getAdminWebPushSupportStatus,
+  getStoredAdminWebPushEndpoint,
   isPlatformAdminBrowserPushSubscribed,
   syncPlatformAdminBrowserPushIfGranted,
 } from '@/core/lib/platform-admin-web-push'
@@ -17,9 +18,21 @@ type Props = {
   className?: string
 }
 
+/** Sync guess so the switch does not flash off→on when opening the menu. */
+function initialSubscribed(): boolean {
+  if (typeof window === 'undefined') return false
+  try {
+    if (typeof Notification === 'undefined') return false
+    if (Notification.permission !== 'granted') return false
+    return Boolean(getStoredAdminWebPushEndpoint())
+  } catch {
+    return false
+  }
+}
+
 export function AdminAlertsToggle({ variant = 'row', className = '' }: Props) {
   const [status, setStatus] = useState(getAdminWebPushSupportStatus())
-  const [subscribed, setSubscribed] = useState(false)
+  const [subscribed, setSubscribed] = useState(initialSubscribed)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
