@@ -41,38 +41,51 @@ export default function PlatformSupportDetailPage() {
   const [showCloseDialog, setShowCloseDialog] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
+  const messagesLenRef = useRef(0)
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (opts?: { silent?: boolean }) => {
     if (!Number.isFinite(conversationId)) return
-    setIsLoading(true)
-    setError(null)
+    const silent = opts?.silent === true
+    if (!silent) {
+      setIsLoading(true)
+      setError(null)
+    }
     try {
       const res = await fetchSupportAdminMessages(conversationId)
       const conv = res.data.conversation
       setConversation(conv)
       setStoreName('store_name' in conv ? String(conv.store_name ?? '') : '')
       setOwnerEmail('owner_email' in conv ? (conv.owner_email as string | null) : null)
-      setMessages(
-        res.data.messages.map((m) => ({
-          ...m,
-          time: formatTime(m.created_at),
-        })),
-      )
-      await markSupportAdminRead(conversationId)
+      const nextMessages = res.data.messages.map((m) => ({
+        ...m,
+        time: formatTime(m.created_at),
+      }))
+      const grew = nextMessages.length > messagesLenRef.current
+      messagesLenRef.current = nextMessages.length
+      setMessages(nextMessages)
+      if (!silent || grew) {
+        await markSupportAdminRead(conversationId)
+      }
     } catch (e: unknown) {
-      setError(getErrorMessage(e, 'Failed to load thread'))
+      if (!silent) setError(getErrorMessage(e, 'Failed to load thread'))
     } finally {
-      setIsLoading(false)
+      if (!silent) setIsLoading(false)
     }
   }, [conversationId])
 
   useEffect(() => {
     void load()
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === 'visible') void load({ silent: true })
+    }, 5000)
     const onVisibility = () => {
-      if (document.visibilityState === 'visible') void load()
+      if (document.visibilityState === 'visible') void load({ silent: true })
     }
     document.addEventListener('visibilitychange', onVisibility)
-    return () => document.removeEventListener('visibilitychange', onVisibility)
+    return () => {
+      window.clearInterval(interval)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
   }, [load])
 
   useEffect(() => {
@@ -93,7 +106,11 @@ export default function PlatformSupportDetailPage() {
     try {
       const res = await sendSupportAdminReply(conversationId, text)
       const msg = res.data.message
-      setMessages((prev) => [...prev, { ...msg, time: formatTime(msg.created_at) }])
+      setMessages((prev) => {
+        const next = [...prev, { ...msg, time: formatTime(msg.created_at) }]
+        messagesLenRef.current = next.length
+        return next
+      })
       setDraft('')
     } catch (e: unknown) {
       setError(getErrorMessage(e, 'Failed to send reply'))
