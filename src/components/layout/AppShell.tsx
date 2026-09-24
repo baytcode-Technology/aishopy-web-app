@@ -163,7 +163,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const storeName = store?.name ?? sessionStoreName ?? 'AiShopy'
   const hideTabs = isDetailRoute(pathname)
   const chatThread = isChatThreadRoute(pathname)
-  const showMerchantNav = Boolean(store) && !isAdminShellRoute(pathname)
+  const adminShell = isAdminShellRoute(pathname)
+  const showMerchantNav = Boolean(store) && !adminShell
 
   const handleSignOut = async () => {
     await unregisterStoredWebPushOnSignOut(store?.id ?? sessionStoreId)
@@ -234,14 +235,20 @@ export function AppShell({ children }: { children: ReactNode }) {
 
           <div
             className={
-              chatThread
+              chatThread || adminShell
                 ? 'flex h-dvh min-h-0 flex-1 flex-col overflow-hidden'
                 : `flex min-h-screen flex-1 flex-col lg:min-h-0 lg:overflow-y-auto ${
                     hideTabs || !showMerchantNav ? '' : 'pb-24 lg:pb-0'
                   }`
             }
           >
-            <div className={chatThread ? 'flex min-h-0 flex-1 flex-col' : 'flex-1'}>{children}</div>
+            <div
+              className={
+                chatThread || adminShell ? 'flex min-h-0 flex-1 flex-col' : 'flex-1'
+              }
+            >
+              {children}
+            </div>
           </div>
 
           {hideTabs || !showMerchantNav ? null : (
