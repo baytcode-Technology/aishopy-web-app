@@ -1,5 +1,6 @@
 'use client'
 
+import { AdminAlertsEnableCard } from '@/components/admin/AdminAlertsEnableCard'
 import { AppLogo } from '@/components/brand/AppLogo'
 import { MenuIcon } from '@/components/ui/MenuIcons'
 import { UnreadCountBadge } from '@/components/ui/UnreadCountBadge'
@@ -71,9 +72,10 @@ export function AdminWorkspaceShell({ children }: Props) {
             })}
           </nav>
           <div className="mt-auto border-t border-gray-200 px-3 py-4">
+            <AdminAlertsEnableCard />
             <Link
               href="/platform-admin"
-              className="block rounded-2xl px-3 py-2.5 text-[13px] font-semibold text-gray-500 hover:bg-gray-50"
+              className="mt-1 block rounded-2xl px-3 py-2.5 text-[13px] font-semibold text-gray-500 hover:bg-gray-50"
             >
               Back to admin home
             </Link>
@@ -82,6 +84,9 @@ export function AdminWorkspaceShell({ children }: Props) {
       </aside>
 
       <div className="flex min-h-full flex-1 flex-col pb-24 lg:min-h-0 lg:overflow-y-auto lg:pb-0">
+        <div className="lg:hidden">
+          <AdminAlertsEnableCard />
+        </div>
         {children}
       </div>
 
