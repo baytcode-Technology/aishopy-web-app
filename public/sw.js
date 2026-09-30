@@ -29,14 +29,39 @@ self.addEventListener('push', (event) => {
   const important = data.important === '1' || data.important === true
 
   event.waitUntil(
-    self.registration.showNotification(payload.title, {
-      body: payload.body,
-      icon: '/icon-192.png',
-      badge: '/favicon-48.png',
-      data,
-      ...(tag ? { tag, renotify: true } : {}),
-      requireInteraction: important,
-    })
+    (async () => {
+      const clients = await self.clients.matchAll({
+        type: 'window',
+        includeUncontrolled: true,
+      })
+      const origin = self.location.origin
+      for (const client of clients) {
+        try {
+          if (new URL(client.url).origin !== origin) continue
+        } catch {
+          continue
+        }
+        if (client.focused) {
+          client.postMessage({
+            type: 'push-toast',
+            title: payload.title,
+            body: payload.body,
+            data,
+          })
+        }
+      }
+
+      // Always show a system notification (background). Focused clients also get an in-app toast
+      // because iOS often suppresses banners while the Home Screen app is open.
+      await self.registration.showNotification(payload.title, {
+        body: payload.body,
+        icon: '/icon-192.png',
+        badge: '/favicon-48.png',
+        data,
+        ...(tag ? { tag, renotify: true } : {}),
+        requireInteraction: important,
+      })
+    })()
   )
 })
 
