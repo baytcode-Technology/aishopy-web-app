@@ -1,6 +1,6 @@
 /** Maps push / notification data to an in-app path (keep in sync with public/sw.js). */
 export function pathFromNotificationData(data: Record<string, unknown> | null | undefined): string {
-  if (!data || typeof data !== 'object') return '/dashboard'
+  if (!data || typeof data !== 'object') return '/products'
 
   const type = typeof data.type === 'string' ? data.type : ''
   const channel = typeof data.channel === 'string' ? data.channel : ''
@@ -41,5 +41,5 @@ export function pathFromNotificationData(data: Record<string, unknown> | null | 
     return '/orders'
   }
 
-  return '/dashboard'
+  return '/products'
 }

@@ -11,7 +11,7 @@ export default function AdminWorkspaceLayout({ children }: { children: ReactNode
 
   useEffect(() => {
     if (!isLoading && !isPlatformAdmin) {
-      router.replace('/dashboard')
+      router.replace('/products')
     }
   }, [isLoading, isPlatformAdmin, router])
 

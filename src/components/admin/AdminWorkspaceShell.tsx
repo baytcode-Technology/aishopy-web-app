@@ -36,7 +36,7 @@ export function AdminWorkspaceShell({ children }: Props) {
   const unreadOnTickets = summary.unread_messages
 
   return (
-    <div className="min-h-screen bg-gray-100 lg:flex lg:h-dvh lg:overflow-hidden">
+    <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-gray-100 lg:h-dvh lg:flex-row">
       <aside className="hidden lg:flex lg:h-full lg:w-64 lg:shrink-0 lg:flex-col lg:border-r lg:border-gray-200 lg:bg-surface">
         <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
           <div className="flex min-h-full flex-col">
@@ -88,7 +88,7 @@ export function AdminWorkspaceShell({ children }: Props) {
         </div>
       </aside>
 
-      <div className="flex min-h-screen flex-1 flex-col pb-24 lg:min-h-0 lg:overflow-y-auto lg:pb-0">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pb-24 lg:pb-0">
         {children}
       </div>
 

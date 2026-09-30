@@ -156,5 +156,5 @@ function pathFromNotificationData(data) {
     return '/orders'
   }
 
-  return '/dashboard'
+  return '/products'
 }

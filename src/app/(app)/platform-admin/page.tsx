@@ -26,7 +26,7 @@ export default function PlatformAdminPage() {
 
   useEffect(() => {
     if (!adminLoading && !isPlatformAdmin) {
-      router.replace('/dashboard')
+      router.replace('/products')
     }
   }, [adminLoading, isPlatformAdmin, router])
 

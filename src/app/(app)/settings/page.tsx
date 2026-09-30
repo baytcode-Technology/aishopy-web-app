@@ -37,7 +37,7 @@ export default function SettingsPage() {
     useStore()
   const [editOpen, setEditOpen] = useState(false)
   const [logoOpen, setLogoOpen] = useState(false)
-  const { isPlatformAdmin } = usePlatformAdmin()
+  const { isPlatformAdmin, isLoading: adminLoading } = usePlatformAdmin()
   const { summary } = useSupportAdminSummary(isPlatformAdmin)
   const openTickets = summary.escalated_count
   const unreadOnTickets = summary.unread_messages
@@ -67,6 +67,17 @@ export default function SettingsPage() {
   const storefrontUrl = store?.slug ? buildSubdomainUrl(store.slug) : subdomainUrl
   const isAdminWithoutStore = isPlatformAdmin && !store
 
+  if (adminLoading) {
+    return (
+      <main className="min-h-full bg-gray-100">
+        <CatalogHeader title="Settings" subtitle="Loading…" showSettings={false} />
+        <div className="flex justify-center py-16">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-200 border-t-brand-green" />
+        </div>
+      </main>
+    )
+  }
+
   return (
     <main className="min-h-full bg-gray-100">
       <CatalogHeader
@@ -78,7 +89,7 @@ export default function SettingsPage() {
             router.back()
             return
           }
-          router.push(isAdminWithoutStore ? '/platform-admin' : '/dashboard')
+          router.push(isAdminWithoutStore ? '/platform-admin' : '/products')
         }}
       />
 
@@ -231,26 +242,35 @@ export default function SettingsPage() {
               </p>
 
               {isPlatformAdmin ? (
-                <div className="relative">
+                <>
                   <MenuRow
-                    label="Support inbox"
-                    value={
-                      openTickets > 0
-                        ? `${openTickets} open ticket${openTickets === 1 ? '' : 's'}`
-                        : unreadOnTickets > 0
-                          ? `${unreadOnTickets} unread on tickets`
-                          : 'AiShopy merchant Chat with AI'
-                    }
-                    icon="inbox"
+                    label="Admin home"
+                    value="Platform support dashboard"
+                    icon="home"
                     showChevron
-                    onPress={() => router.push('/platform-admin/workspace/support')}
+                    onPress={() => router.replace('/platform-admin')}
                   />
-                  {unreadOnTickets > 0 ? (
-                    <div className="absolute right-5 top-3">
-                      <UnreadCountBadge count={unreadOnTickets} />
-                    </div>
-                  ) : null}
-                </div>
+                  <div className="relative">
+                    <MenuRow
+                      label="Support inbox"
+                      value={
+                        openTickets > 0
+                          ? `${openTickets} open ticket${openTickets === 1 ? '' : 's'}`
+                          : unreadOnTickets > 0
+                            ? `${unreadOnTickets} unread on tickets`
+                            : 'AiShopy merchant Chat with AI'
+                      }
+                      icon="inbox"
+                      showChevron
+                      onPress={() => router.push('/platform-admin/workspace/support')}
+                    />
+                    {unreadOnTickets > 0 ? (
+                      <div className="absolute right-5 top-3">
+                        <UnreadCountBadge count={unreadOnTickets} />
+                      </div>
+                    ) : null}
+                  </div>
+                </>
               ) : null}
 
               <MenuRow

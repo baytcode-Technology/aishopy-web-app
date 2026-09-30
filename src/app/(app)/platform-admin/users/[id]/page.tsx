@@ -146,7 +146,7 @@ export default function PlatformAdminUserDetailPage() {
 
   useEffect(() => {
     if (!adminLoading && !isPlatformAdmin) {
-      router.replace('/dashboard')
+      router.replace('/products')
     }
   }, [adminLoading, isPlatformAdmin, router])
 
@@ -159,7 +159,7 @@ export default function PlatformAdminUserDetailPage() {
       setDetail(res.data)
     } catch (e) {
       if (getApiErrorCode(e) === 'FORBIDDEN') {
-        router.replace('/dashboard')
+        router.replace('/products')
         return
       }
       setError(getErrorMessage(e, 'Could not load this user'))
