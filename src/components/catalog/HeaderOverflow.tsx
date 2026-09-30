@@ -61,16 +61,30 @@ export function HeaderOverflow() {
               <div className="my-1 border-t border-gray-100" />
             </>
           ) : null}
-          <button
-            type="button"
-            className="block w-full px-4 py-2.5 text-left text-[13px] font-semibold text-ink hover:bg-gray-50"
-            onClick={() => {
-              setOpen(false)
-              router.push('/select-store')
-            }}
-          >
-            Switch store
-          </button>
+          {isPlatformAdmin && store ? (
+            <button
+              type="button"
+              className="block w-full px-4 py-2.5 text-left text-[13px] font-semibold text-ink hover:bg-gray-50"
+              onClick={() => {
+                setOpen(false)
+                router.push('/platform-admin')
+              }}
+            >
+              Admin home
+            </button>
+          ) : null}
+          {store ? (
+            <button
+              type="button"
+              className="block w-full px-4 py-2.5 text-left text-[13px] font-semibold text-ink hover:bg-gray-50"
+              onClick={() => {
+                setOpen(false)
+                router.push('/select-store')
+              }}
+            >
+              Switch store
+            </button>
+          ) : null}
           <button
             type="button"
             className="block w-full px-4 py-2.5 text-left text-[13px] font-semibold text-gray-500 hover:bg-gray-50"

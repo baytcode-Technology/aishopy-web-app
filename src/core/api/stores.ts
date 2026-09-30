@@ -66,3 +66,54 @@ export async function removeStoreStaff(storeId: number, staffId: number) {
     { method: 'DELETE' },
   )
 }
+
+export type CustomDomainStatus = 'none' | 'pending' | 'active' | 'failed'
+
+export type CustomDomainView = {
+  subdomain: string
+  custom_domain: string | null
+  status: CustomDomainStatus
+  verified_at: string | null
+  cname_host: string
+  cname_target: string
+}
+
+type CustomDomainResponse = {
+  success: boolean
+  message?: string
+  data: CustomDomainView
+}
+
+export async function fetchCustomDomain(storeId: number): Promise<CustomDomainView> {
+  const res = await authenticatedFetch<CustomDomainResponse>(
+    `${endpoints.customDomain}${storeIdQuery(storeId)}`,
+  )
+  return res.data
+}
+
+export async function saveCustomDomain(storeId: number, domain: string): Promise<CustomDomainView> {
+  const res = await authenticatedFetch<CustomDomainResponse>(
+    `${endpoints.customDomain}${storeIdQuery(storeId)}`,
+    {
+      method: 'PUT',
+      body: JSON.stringify({ domain }),
+    },
+  )
+  return res.data
+}
+
+export async function verifyCustomDomain(storeId: number): Promise<CustomDomainView> {
+  const res = await authenticatedFetch<CustomDomainResponse>(
+    `${endpoints.customDomain}/verify${storeIdQuery(storeId)}`,
+    { method: 'POST' },
+  )
+  return res.data
+}
+
+export async function deleteCustomDomain(storeId: number): Promise<CustomDomainView> {
+  const res = await authenticatedFetch<CustomDomainResponse>(
+    `${endpoints.customDomain}${storeIdQuery(storeId)}`,
+    { method: 'DELETE' },
+  )
+  return res.data
+}

@@ -85,13 +85,23 @@ function isAdminShellRoute(pathname: string) {
   )
 }
 
+const MERCHANT_TAB_PREFIXES = ['/products', '/orders', '/inbox', '/dashboard'] as const
+
+function isMerchantTabPath(pathname: string) {
+  return MERCHANT_TAB_PREFIXES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
+  )
+}
+
 function AppGate({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading: authLoading } = useAuth()
   const { store, hydrateActiveStore } = useStore()
+  const pathname = usePathname()
   const router = useRouter()
   const [ready, setReady] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const adminShell = isAdminShellRoute(pathname)
 
   useEffect(() => {
     if (authLoading || !isAuthenticated) return
@@ -104,8 +114,9 @@ function AppGate({ children }: { children: ReactNode }) {
           fetchSupportAdminStatus().catch(() => ({ data: { isAdmin: false } })),
         ])
         if (cancelled) return
-        setIsAdmin(adminRes.data.isAdmin)
-        if (!hasStore && !store && !adminRes.data.isAdmin) {
+        const admin = adminRes.data.isAdmin
+        setIsAdmin(admin)
+        if (!hasStore && !store && !admin) {
           router.replace('/store-check')
           return
         }
@@ -120,6 +131,14 @@ function AppGate({ children }: { children: ReactNode }) {
       cancelled = true
     }
   }, [authLoading, hydrateActiveStore, isAuthenticated, router, store])
+
+  useEffect(() => {
+    if (!ready || !isAdmin || store || adminShell) return
+    // Admin without a store: block empty merchant tabs (Settings stays available).
+    if (isMerchantTabPath(pathname)) {
+      router.replace('/platform-admin')
+    }
+  }, [ready, isAdmin, store, adminShell, pathname, router])
 
   if (error) {
     return (

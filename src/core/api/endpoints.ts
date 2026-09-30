@@ -10,6 +10,7 @@ export const endpoints = {
   storesMine: '/api/stores/mine',
   storesStaff: '/api/stores/staff',
   stores: '/api/stores',
+  customDomain: '/api/stores/me/custom-domain',
   inboxAiSettings: (storeId: number) => `/api/stores/${storeId}/inbox-ai/settings`,
   whatsappReplyMode: (conversationId: number, storeId: number) =>
     `/api/whatsapp/chats/${conversationId}/reply-mode?store_id=${storeId}`,

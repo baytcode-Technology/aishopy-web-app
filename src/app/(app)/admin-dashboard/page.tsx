@@ -1,9 +1,9 @@
 'use client'
 
 import { DeleteAccountSection } from '@/components/account/DeleteAccountSection'
+import { CustomDomainPanel } from '@/components/admin/CustomDomainPanel'
 import { CatalogHeader } from '@/components/catalog/CatalogHeader'
 import { LockedMenuRow } from '@/components/ui/LockedMenuRow'
-import { MenuIcon } from '@/components/ui/MenuIcons'
 import { env } from '@/core/config/env'
 import { hasPremiumAccess } from '@/core/lib/subscription'
 import { useStore } from '@/providers/store-provider'
@@ -15,7 +15,6 @@ export default function AdminDashboardPage() {
   const { store, role } = useStore()
   const premium = hasPremiumAccess(store)
   const [domainOpen, setDomainOpen] = useState(false)
-  const [customDomainComingSoon, setCustomDomainComingSoon] = useState(false)
 
   useEffect(() => {
     if (role === 'staff') router.replace('/settings')
@@ -23,7 +22,12 @@ export default function AdminDashboardPage() {
 
   if (role === 'staff') return null
 
-  const currentDomain = store?.slug ? `${store.slug}.${env.storefrontBaseDomain}` : '—'
+  const currentDomain =
+    store?.custom_domain_status === 'active' && store.custom_domain
+      ? store.custom_domain
+      : store?.slug
+        ? `${store.slug}.${env.storefrontBaseDomain}`
+        : '—'
 
   const goToSubscription = () => router.push('/subscription')
 
@@ -33,15 +37,6 @@ export default function AdminDashboardPage() {
       return
     }
     setDomainOpen((open) => !open)
-    if (domainOpen) setCustomDomainComingSoon(false)
-  }
-
-  const handleCustomDomainPress = () => {
-    if (!premium) {
-      goToSubscription()
-      return
-    }
-    setCustomDomainComingSoon(true)
   }
 
   return (
@@ -117,32 +112,7 @@ export default function AdminDashboardPage() {
                 <p className="mt-1.5 text-[13px] text-gray-500">Your live storefront address</p>
               </div>
 
-              <button
-                type="button"
-                onClick={handleCustomDomainPress}
-                className="flex w-full items-center justify-between px-5 py-4 text-left"
-              >
-                <div className="min-w-0 flex-1 pr-3">
-                  <p className="mb-1.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                    Custom domain
-                  </p>
-                  <p className="text-[15px] font-semibold text-ink">Use your own domain</p>
-                  <p className="mt-1.5 text-[13px] text-gray-500">e.g. shop.yourbrand.com</p>
-                </div>
-                <MenuIcon name="chevron-right" className="h-3 w-3 text-gray-400" />
-              </button>
-
-              {customDomainComingSoon ? (
-                <div className="px-5 pb-4 pt-0">
-                  <div className="rounded-xl border border-gray-200 bg-gray-100 px-4 py-3">
-                    <p className="mb-1 text-[13px] font-bold text-ink">Coming soon</p>
-                    <p className="text-[13px] leading-5 text-gray-500">
-                      Custom domain setup will be available here. You can connect your own domain to
-                      your storefront soon.
-                    </p>
-                  </div>
-                </div>
-              ) : null}
+              <CustomDomainPanel />
             </div>
           ) : null}
         </div>
