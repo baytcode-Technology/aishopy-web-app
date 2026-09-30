@@ -5,6 +5,7 @@ import { AppLogo } from '@/components/brand/AppLogo'
 import { StorePickerList } from '@/components/store/StorePickerList'
 import { Button } from '@/components/ui/Button'
 import { Heading } from '@/components/ui/Typography'
+import { clearWebPushOnSignOut } from '@/core/lib/sign-out-push'
 import { getStoreSession, normalizeStoreSession } from '@/platform/store-storage'
 import { useAuth } from '@/providers/auth-provider'
 import { useStore } from '@/providers/store-provider'
@@ -14,7 +15,7 @@ import { useEffect, useRef, useState } from 'react'
 
 function SelectStoreContent() {
   const { signOut } = useAuth()
-  const { stores, store, refreshStores, switchStore, clearStore } = useStore()
+  const { stores, store, sessionStoreId, refreshStores, switchStore, clearStore } = useStore()
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
   const [lastSessionStoreId, setLastSessionStoreId] = useState<number | null>(null)
@@ -45,6 +46,7 @@ function SelectStoreContent() {
   }
 
   const handleSignOut = async () => {
+    await clearWebPushOnSignOut(store?.id ?? sessionStoreId)
     await clearStore()
     await signOut()
     router.replace('/login')

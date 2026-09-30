@@ -11,7 +11,7 @@ import { fetchSupportAdminStatus } from '@/core/api/support'
 import { env } from '@/core/config/env'
 import { CURRENCY_OPTIONS } from '@/core/data/currencies'
 import { getApiErrorCode, getErrorMessage } from '@/core/lib/api-error'
-import { unregisterStoredWebPushOnSignOut } from '@/core/lib/web-push'
+import { clearWebPushOnSignOut } from '@/core/lib/sign-out-push'
 import {
   COUNTRY_OPTIONS,
   DEFAULT_COUNTRY,
@@ -85,7 +85,7 @@ function CreateStoreForm() {
   }
 
   const handleSignOut = async () => {
-    await unregisterStoredWebPushOnSignOut(store?.id ?? sessionStoreId)
+    await clearWebPushOnSignOut(store?.id ?? sessionStoreId)
     await clearStore()
     await signOut()
     router.replace('/login')

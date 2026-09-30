@@ -1,6 +1,7 @@
 'use client'
 
 import { NotificationNavigateListener } from '@/components/notifications/NotificationNavigateListener'
+import { PushToastListener } from '@/components/notifications/PushToastListener'
 import {
   registerServiceWorker,
   syncBrowserPushIfGranted,
@@ -24,5 +25,10 @@ export function WebPushLifecycle() {
     void syncBrowserPushIfGranted(store.id)
   }, [isAuthenticated, store?.id])
 
-  return <NotificationNavigateListener />
+  return (
+    <>
+      <NotificationNavigateListener />
+      <PushToastListener />
+    </>
+  )
 }

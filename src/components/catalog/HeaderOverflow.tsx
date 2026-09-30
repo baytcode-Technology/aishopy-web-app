@@ -1,6 +1,7 @@
 'use client'
 
 import { AdminAlertsToggle } from '@/components/admin/AdminAlertsToggle'
+import { clearWebPushOnSignOut } from '@/core/lib/sign-out-push'
 import { usePlatformAdmin } from '@/hooks/usePlatformAdmin'
 import { useAuth } from '@/providers/auth-provider'
 import { useStore } from '@/providers/store-provider'
@@ -19,7 +20,7 @@ export function HeaderOverflow() {
   const router = useRouter()
   const pathname = usePathname()
   const { signOut } = useAuth()
-  const { clearStore } = useStore()
+  const { store, sessionStoreId, clearStore } = useStore()
   const { isPlatformAdmin } = usePlatformAdmin()
   const [open, setOpen] = useState(false)
   const wrapRef = useRef<HTMLDivElement>(null)
@@ -36,6 +37,7 @@ export function HeaderOverflow() {
 
   const handleSignOut = async () => {
     setOpen(false)
+    await clearWebPushOnSignOut(store?.id ?? sessionStoreId)
     await clearStore()
     await signOut()
     router.replace('/login')

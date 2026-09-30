@@ -7,7 +7,7 @@ import { ThemeToggleChip } from '@/components/ui/ThemeToggleChip'
 import { UnreadCountBadge } from '@/components/ui/UnreadCountBadge'
 import { useSupportAdminSummary } from '@/hooks/useSupportAdminSummary'
 import { usePlatformAdmin } from '@/hooks/usePlatformAdmin'
-import { unregisterStoredWebPushOnSignOut } from '@/core/lib/web-push'
+import { clearWebPushOnSignOut } from '@/core/lib/sign-out-push'
 import { useAuth } from '@/providers/auth-provider'
 import { useStore } from '@/providers/store-provider'
 import { useRouter } from 'next/navigation'
@@ -34,7 +34,7 @@ export default function PlatformAdminPage() {
   const unreadOnTickets = summary.unread_messages
 
   const handleSignOut = async () => {
-    await unregisterStoredWebPushOnSignOut(store?.id ?? sessionStoreId)
+    await clearWebPushOnSignOut(store?.id ?? sessionStoreId)
     await clearStore()
     await signOut()
     router.replace('/login')

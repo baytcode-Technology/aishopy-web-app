@@ -16,6 +16,7 @@ import { Heading } from '@/components/ui/Typography'
 import { env } from '@/core/config/env'
 import { buildSubdomainUrl } from '@/core/lib/storefront'
 import { getPlanLabel, getStorePlan } from '@/core/lib/subscription'
+import { clearWebPushOnSignOut } from '@/core/lib/sign-out-push'
 import { PRIVACY_POLICY_URL, SUPPORT_EMAIL, TERMS_OF_USE_URL } from '@/core/lib/support-contact'
 import type { Store } from '@/core/types/store'
 import { usePlatformAdmin } from '@/hooks/usePlatformAdmin'
@@ -32,7 +33,8 @@ function comingSoonHref(id: string) {
 export default function SettingsPage() {
   const router = useRouter()
   const { user, signOut } = useAuth()
-  const { store, refreshStore, activateStoreSession, subdomainUrl, clearStore, role } = useStore()
+  const { store, sessionStoreId, refreshStore, activateStoreSession, subdomainUrl, clearStore, role } =
+    useStore()
   const [editOpen, setEditOpen] = useState(false)
   const [logoOpen, setLogoOpen] = useState(false)
   const { isPlatformAdmin } = usePlatformAdmin()
@@ -47,6 +49,7 @@ export default function SettingsPage() {
   }
 
   const handleSignOut = async () => {
+    await clearWebPushOnSignOut(store?.id ?? sessionStoreId)
     await clearStore()
     await signOut()
     router.replace('/login')

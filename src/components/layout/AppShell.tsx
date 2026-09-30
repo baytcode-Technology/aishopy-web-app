@@ -10,7 +10,7 @@ import {
 } from '@/components/layout/NavIcons'
 import { fetchSupportAdminStatus } from '@/core/api/support'
 import { getErrorMessage } from '@/core/lib/api-error'
-import { unregisterStoredWebPushOnSignOut } from '@/core/lib/web-push'
+import { clearWebPushOnSignOut } from '@/core/lib/sign-out-push'
 import { UnreadCountBadge } from '@/components/ui/UnreadCountBadge'
 import { useAuth } from '@/providers/auth-provider'
 import { useChatsUnread } from '@/providers/chats-unread-provider'
@@ -167,7 +167,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const showMerchantNav = Boolean(store) && !adminShell
 
   const handleSignOut = async () => {
-    await unregisterStoredWebPushOnSignOut(store?.id ?? sessionStoreId)
+    await clearWebPushOnSignOut(store?.id ?? sessionStoreId)
     await clearStore()
     await signOut()
     router.replace('/login')

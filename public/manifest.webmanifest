@@ -2,7 +2,7 @@
   "name": "AiShopy",
   "short_name": "AiShopy",
   "description": "Merchant dashboard for AiShopy",
-  "start_url": "/dashboard",
+  "start_url": "/store-check",
   "scope": "/",
   "display": "standalone",
   "background_color": "#f5f5f5",
