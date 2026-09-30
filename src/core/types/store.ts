@@ -55,6 +55,9 @@ export type Store = {
   subscription_expires_at?: string | null
   product_count?: number
   order_count?: number
+  custom_domain?: string | null
+  custom_domain_status?: 'pending' | 'active' | 'failed' | null
+  custom_domain_verified_at?: string | null
   created_at: string
   updated_at: string
 }
