@@ -254,16 +254,22 @@ export function AppShell({ children }: { children: ReactNode }) {
 
           <div
             className={
-              chatThread || adminShell
+              chatThread
                 ? 'flex h-dvh min-h-0 flex-1 flex-col overflow-hidden'
-                : `flex min-h-screen flex-1 flex-col lg:min-h-0 lg:overflow-y-auto ${
-                    hideTabs || !showMerchantNav ? '' : 'pb-24 lg:pb-0'
-                  }`
+                : adminShell
+                  ? 'flex h-dvh min-h-0 flex-1 flex-col overflow-y-auto'
+                  : `flex min-h-screen flex-1 flex-col lg:min-h-0 lg:overflow-y-auto ${
+                      hideTabs || !showMerchantNav ? '' : 'pb-24 lg:pb-0'
+                    }`
             }
           >
             <div
               className={
-                chatThread || adminShell ? 'flex min-h-0 flex-1 flex-col' : 'flex-1'
+                chatThread
+                  ? 'flex min-h-0 flex-1 flex-col'
+                  : adminShell
+                    ? 'min-h-0 flex-1'
+                    : 'flex-1'
               }
             >
               {children}

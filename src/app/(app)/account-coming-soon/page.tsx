@@ -21,6 +21,7 @@ type FeatureId =
   | 'support-inbox'
   | 'whatsapp'
   | 'instagram'
+  | 'custom-domain'
 
 const FEATURES: Record<
   FeatureId,
@@ -156,6 +157,19 @@ const FEATURES: Record<
     icon: 'instagram',
     description:
       'Connect your Instagram business account and reply from AiShopy. This will be available soon.',
+  },
+  'custom-domain': {
+    title: 'Custom domain',
+    subtitle: 'Your own storefront URL',
+    icon: 'globe',
+    description:
+      'Point your own domain at your AiShopy storefront with DNS and SSL. This will be available once domain hosting is configured.',
+    features: [
+      'Connect a custom domain (e.g. shop.yourbrand.com)',
+      'DNS CNAME instructions and verification',
+      'Automatic HTTPS for your storefront',
+      'Keep your AiShopy subdomain as a backup',
+    ],
   },
 }
 
