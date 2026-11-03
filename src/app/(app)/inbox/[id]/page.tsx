@@ -135,6 +135,7 @@ function InboxThreadPageInner() {
   const unreadRaw = searchParams.get('unread') ?? '0'
   const replyModeParam = searchParams.get('replyMode')
   const aiPausedUntilParam = searchParams.get('aiPausedUntil')
+  const staffWaitingAtParam = searchParams.get('staffWaitingAt')
 
   const [draft, setDraft] = useState('')
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -150,6 +151,9 @@ function InboxThreadPageInner() {
   )
   const initialAiPausedUntil = aiPausedUntilParam?.trim() ? aiPausedUntilParam : null
   const [aiPausedUntil, setAiPausedUntil] = useState<string | null>(initialAiPausedUntil)
+  const [staffWaitingAt, setStaffWaitingAt] = useState<string | null>(
+    staffWaitingAtParam?.trim() ? staffWaitingAtParam : null,
+  )
   const [customerDisplayName, setCustomerDisplayName] = useState<string | null>(
     displayName?.trim() || null,
   )
@@ -274,6 +278,7 @@ function InboxThreadPageInner() {
       setReplyMode(mode)
       if (mode === 'ai') {
         setAiPausedUntil(null)
+        setStaffWaitingAt(null)
       } else {
         setAiPreparingReply(false)
       }
@@ -298,6 +303,7 @@ function InboxThreadPageInner() {
         id: number
         reply_mode?: 'ai' | 'manual'
         ai_paused_until?: string | null
+        staff_waiting_at?: string | null
         customer_ig_username?: string | null
       }
     }) => {
@@ -307,6 +313,9 @@ function InboxThreadPageInner() {
       }
       if (payload.conversation.ai_paused_until !== undefined) {
         setAiPausedUntil(payload.conversation.ai_paused_until)
+      }
+      if (payload.conversation.staff_waiting_at !== undefined) {
+        setStaffWaitingAt(payload.conversation.staff_waiting_at)
       }
       const username = payload.conversation.customer_ig_username?.trim()
       if (username) {
@@ -902,8 +911,16 @@ function InboxThreadPageInner() {
       store?.ai_auto_reply_enabled &&
       replyMode === 'manual' &&
       hasPremiumAccess(store) ? (
-        <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-3 py-2">
-          <p className="flex-1 text-sm text-gray-600">You are replying manually</p>
+        <div
+          className={`flex items-center justify-between border-b px-3 py-2 ${
+            staffWaitingAt
+              ? 'border-amber-200 bg-amber-50'
+              : 'border-gray-200 bg-gray-50'
+          }`}
+        >
+          <p className={`flex-1 text-sm ${staffWaitingAt ? 'text-amber-800' : 'text-gray-600'}`}>
+            {staffWaitingAt ? 'Customer waiting for you' : 'You are replying manually'}
+          </p>
           <button
             type="button"
             disabled={replyModeBusy}
