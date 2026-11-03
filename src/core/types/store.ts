@@ -46,6 +46,7 @@ export type Store = {
   timezone: string
   payment_config: Record<string, unknown>
   theme_config?: ThemeConfig | null
+  shop_policies?: import('./shop-policies').ShopPolicies | Record<string, unknown>
   ai_system_prompt: string | null
   ai_language: string | null
   ai_auto_reply_enabled?: boolean
@@ -115,6 +116,7 @@ export type UpdateStorePayload = Partial<{
   ai_language: string | null
   is_active: boolean
   theme_config: ThemeConfig | null
+  shop_policies: import('./shop-policies').ShopPolicies
 }>
 
 export type UpdateStoreResponse = {

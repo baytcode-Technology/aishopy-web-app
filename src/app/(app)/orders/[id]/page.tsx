@@ -1,6 +1,7 @@
 'use client'
 
 import { DetailHeader } from '@/components/catalog/DetailHeader'
+import { OrderDeliveryCard } from '@/components/orders/OrderDeliveryCard'
 import { OrderInvoiceCard } from '@/components/orders/OrderInvoiceCard'
 import { OrderPaymentActions } from '@/components/orders/OrderPaymentActions'
 import { OrderPaymentProofCard } from '@/components/orders/OrderPaymentProofCard'
@@ -177,6 +178,15 @@ export default function OrderDetailPage() {
               />
             </div>
 
+            {store ? (
+              <OrderDeliveryCard
+                order={order}
+                storeId={store.id}
+                saving={saving}
+                onSavingChange={setSaving}
+                onUpdated={setOrder}
+              />
+            ) : null}
             {store ? <OrderInvoiceCard order={order} store={store} /> : null}
           </div>
         </div>

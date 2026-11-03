@@ -27,6 +27,8 @@ export type Product = {
   is_active: boolean
   sort_order: number
   metadata: Record<string, unknown>
+  delivery_business_days?: number | null
+  restock_note?: string | null
   variant_summary?: VariantStockSummary | null
   created_at: string
   updated_at: string
@@ -140,6 +142,8 @@ export type UpdateProductPayload = Partial<{
   category_id: number | null
   images: string[]
   thumbnail_url: string
+  delivery_business_days?: number | null
+  restock_note?: string | null
 }>
 
 export type UpdateProductResponse = {

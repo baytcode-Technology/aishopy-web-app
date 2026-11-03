@@ -68,6 +68,8 @@ export function EditProductModal({
   const [generatedVariants, setGeneratedVariants] = useState<GeneratedVariant[]>([])
   const [markAsSold, setMarkAsSold] = useState(false)
   const [markAsNonInventory, setMarkAsNonInventory] = useState(false)
+  const [deliveryDays, setDeliveryDays] = useState('')
+  const [restockNote, setRestockNote] = useState('')
   const [loading, setLoading] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [localError, setLocalError] = useState('')
@@ -100,6 +102,10 @@ export function EditProductModal({
     }
     setMarkAsSold(product.mark_as_sold ?? false)
     setMarkAsNonInventory(product.mark_as_non_inventory ?? false)
+    setDeliveryDays(
+      product.delivery_business_days != null ? String(product.delivery_business_days) : ''
+    )
+    setRestockNote(product.restock_note ?? '')
   }, [product, open, initialVariants])
 
   const validateVariants = (): boolean => {
@@ -142,6 +148,8 @@ export function EditProductModal({
         thumbnail_url,
         mark_as_sold: hasVariants ? false : markAsSold,
         mark_as_non_inventory: hasVariants ? false : markAsNonInventory,
+        delivery_business_days: deliveryDays.trim() ? Number(deliveryDays) : null,
+        restock_note: restockNote.trim() || null,
       })
       if (hasExistingVariants) {
         await persistVariantChanges({
@@ -260,6 +268,19 @@ export function EditProductModal({
             />
           ) : null}
           <Input label="SKU" value={sku} onChange={(e) => setSku(e.target.value)} />
+          <Input
+            label="Delivery days (this product)"
+            value={deliveryDays}
+            onChange={(e) => setDeliveryDays(e.target.value)}
+            inputMode="numeric"
+            placeholder="Blank = shop default"
+          />
+          <Input
+            label="Restock note"
+            value={restockNote}
+            onChange={(e) => setRestockNote(e.target.value)}
+            placeholder="Optional — when stock is back"
+          />
           <CategoryPicker categories={categories} selectedId={categoryId} onSelect={setCategoryId} />
           <Input
             label="Description"

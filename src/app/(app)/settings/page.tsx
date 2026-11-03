@@ -213,6 +213,13 @@ export default function SettingsPage() {
               onPress={() => router.push('/chat-boat')}
             />
             <MenuRow
+              label="Shop policies"
+              value="Delivery, returns, hours, offers"
+              icon="globe"
+              showChevron
+              onPress={() => router.push('/shop-policies')}
+            />
+            <MenuRow
               label="Printer"
               value="Receipts & labels"
               icon="print"
