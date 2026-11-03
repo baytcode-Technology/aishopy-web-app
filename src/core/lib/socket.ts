@@ -69,6 +69,8 @@ export type SocketConversationPayload = {
     unread_count: number
     reply_mode?: 'ai' | 'manual'
     ai_paused_until?: string | null
+    staff_waiting_at?: string | null
+    staff_warned_at?: string | null
   }
 }
 
@@ -103,6 +105,8 @@ export type SocketInstagramConversationPayload = {
     unread_count: number
     reply_mode?: 'ai' | 'manual'
     ai_paused_until?: string | null
+    staff_waiting_at?: string | null
+    staff_warned_at?: string | null
   }
 }
 

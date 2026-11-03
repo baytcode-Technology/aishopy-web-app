@@ -49,6 +49,7 @@ export default function InboxPage() {
     onInstagramMessageNew,
   } = useChatSocket()
   const [search, setSearch] = useState('')
+  const [listFilter, setListFilter] = useState<'all' | 'waiting'>('all')
   const [items, setItems] = useState<ChatListItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -171,8 +172,16 @@ export default function InboxPage() {
     isActiveChat,
   ])
 
+  const waitingCount = useMemo(
+    () => items.filter((c) => Boolean(c.staffWaitingAt)).length,
+    [items],
+  )
+
   const conversations = useMemo(() => {
     let list = items
+    if (listFilter === 'waiting') {
+      list = list.filter((c) => Boolean(c.staffWaitingAt))
+    }
     const q = search.trim().toLowerCase()
     if (q) {
       list = list.filter(
@@ -183,7 +192,7 @@ export default function InboxPage() {
       )
     }
     return list
-  }, [items, search])
+  }, [items, search, listFilter])
 
   const headerSubtitle = useMemo(() => {
     if (!store?.id) return 'Connect your store to view messages'
@@ -201,6 +210,7 @@ export default function InboxPage() {
       unread: String(item.unread),
       replyMode: item.replyMode ?? 'ai',
       aiPausedUntil: item.aiPausedUntil ?? '',
+      staffWaitingAt: item.staffWaitingAt ?? '',
     })
     router.push(`/inbox/${item.id}?${params.toString()}`)
   }
@@ -251,6 +261,28 @@ export default function InboxPage() {
               value={search}
               onChange={setSearch}
             />
+            <div className="flex gap-2 px-4 pb-2">
+              {(['all', 'waiting'] as const).map((id) => {
+                const selected = listFilter === id
+                const label = id === 'all' ? 'All' : 'Waiting'
+                const count = id === 'all' ? items.length : waitingCount
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setListFilter(id)}
+                    className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm ${
+                      selected
+                        ? 'border-brand-primary bg-brand-primary/10 font-semibold text-brand-primary'
+                        : 'border-gray-200 bg-surface text-gray-500'
+                    }`}
+                  >
+                    {label}
+                    <span className="font-bold">{count}</span>
+                  </button>
+                )
+              })}
+            </div>
 
             {conversations.length > 0 ? (
               <div className="bg-surface">

@@ -42,7 +42,11 @@ export function ConversationRow({ conversation, onPress }: Props) {
             <p className="flex-1 truncate text-[15px] font-semibold leading-tight text-ink">
               {conversation.title}
             </p>
-            {conversation.aiHandling ? (
+            {conversation.staffWaitingAt ? (
+              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-800">
+                Waiting
+              </span>
+            ) : conversation.aiHandling ? (
               <MenuIcon name="magic" className="h-3 w-3 shrink-0 text-brand-primary" />
             ) : null}
           </div>

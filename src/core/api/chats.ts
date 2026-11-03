@@ -15,6 +15,7 @@ export type ApiConversation = {
   unread_count?: number
   reply_mode?: 'ai' | 'manual'
   ai_paused_until?: string | null
+  staff_waiting_at?: string | null
 }
 
 export type ApiInstagramConversation = {
@@ -27,6 +28,7 @@ export type ApiInstagramConversation = {
   unread_count?: number
   reply_mode?: 'ai' | 'manual'
   ai_paused_until?: string | null
+  staff_waiting_at?: string | null
 }
 
 export type ListChatsResponse = {

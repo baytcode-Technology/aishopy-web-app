@@ -33,6 +33,7 @@ export function mapWhatsAppConversation(c: {
   unread_count?: number
   reply_mode?: 'ai' | 'manual'
   ai_paused_until?: string | null
+  staff_waiting_at?: string | null
 }): ChatListItem {
   const phone = c.customer_wa_number
   const name = c.customer_name?.trim()
@@ -50,6 +51,7 @@ export function mapWhatsAppConversation(c: {
     initials: initialsFromLabel(title, 'WA'),
     replyMode: c.reply_mode ?? 'ai',
     aiPausedUntil: c.ai_paused_until ?? null,
+    staffWaitingAt: c.staff_waiting_at ?? null,
   }
 }
 
@@ -62,6 +64,7 @@ export function mapInstagramConversation(c: {
   unread_count?: number
   reply_mode?: 'ai' | 'manual'
   ai_paused_until?: string | null
+  staff_waiting_at?: string | null
 }): ChatListItem {
   const title = c.customer_ig_username ? `@${c.customer_ig_username}` : c.customer_ig_id
   return {
@@ -77,6 +80,7 @@ export function mapInstagramConversation(c: {
     initials: initialsFromLabel(title, 'IG'),
     replyMode: c.reply_mode ?? 'ai',
     aiPausedUntil: c.ai_paused_until ?? null,
+    staffWaitingAt: c.staff_waiting_at ?? null,
   }
 }
 
@@ -124,6 +128,8 @@ export function mergeChatLists(current: ChatListItem[], fetched: ChatListItem[])
       title: item.title || prev.title,
       replyMode: item.replyMode ?? prev.replyMode,
       aiPausedUntil: item.aiPausedUntil ?? prev.aiPausedUntil,
+      staffWaitingAt:
+        item.staffWaitingAt !== undefined ? item.staffWaitingAt : prev.staffWaitingAt,
       unread: resolveListUnread({
         isActive: false,
         payloadUnread: item.unread,
@@ -160,6 +166,7 @@ export function upsertWhatsAppFromConversation(
       unread_count: number
       reply_mode?: 'ai' | 'manual'
       ai_paused_until?: string | null
+      staff_waiting_at?: string | null
     }
   },
   isActiveChat: (conversationId: number, channel: ChatChannel) => boolean,
@@ -186,6 +193,10 @@ export function upsertWhatsAppFromConversation(
       payload.conversation.ai_paused_until !== undefined
         ? payload.conversation.ai_paused_until
         : (existing?.aiPausedUntil ?? null),
+    staffWaitingAt:
+      payload.conversation.staff_waiting_at !== undefined
+        ? payload.conversation.staff_waiting_at
+        : (existing?.staffWaitingAt ?? null),
   }
   return sortConversations([updated, ...withoutConversation(prev, 'whatsapp', updated.id)])
 }
@@ -202,6 +213,7 @@ export function upsertInstagramFromConversation(
       unread_count: number
       reply_mode?: 'ai' | 'manual'
       ai_paused_until?: string | null
+      staff_waiting_at?: string | null
     }
   },
   isActiveChat: (conversationId: number, channel: ChatChannel) => boolean,
@@ -230,6 +242,10 @@ export function upsertInstagramFromConversation(
       payload.conversation.ai_paused_until !== undefined
         ? payload.conversation.ai_paused_until
         : (existing?.aiPausedUntil ?? null),
+    staffWaitingAt:
+      payload.conversation.staff_waiting_at !== undefined
+        ? payload.conversation.staff_waiting_at
+        : (existing?.staffWaitingAt ?? null),
   }
   return sortConversations([updated, ...withoutConversation(prev, 'instagram', updated.id)])
 }
