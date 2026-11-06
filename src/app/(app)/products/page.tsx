@@ -92,18 +92,23 @@ export default function ProductsPage() {
 
   return (
     <main className="min-h-full bg-gray-100">
-      <CatalogHeader
-        title="Products"
-        subtitle={`${products.length} products · ${categories.length} categories`}
-        right={
-          <Link
-            href="/products/categories"
-            className="rounded-full border border-gray-200 bg-surface px-4 py-2.5 text-[12px] font-bold tracking-wide text-ink"
-          >
-            Categories
-          </Link>
-        }
-      />
+      <CatalogHeader title="Products" />
+      <div className="flex items-center justify-between gap-3 bg-surface px-5 pb-3">
+        <div className="flex min-w-0 flex-wrap gap-2">
+          <span className="rounded-full bg-gray-100 px-3 py-1 text-[12px] font-semibold text-ink">
+            {products.length} products
+          </span>
+          <span className="rounded-full bg-gray-100 px-3 py-1 text-[12px] font-semibold text-ink">
+            {categories.length} categories
+          </span>
+        </div>
+        <Link
+          href="/products/categories"
+          className="shrink-0 rounded-full border border-gray-200 bg-surface px-3 py-1.5 text-[12px] font-bold text-ink"
+        >
+          Categories
+        </Link>
+      </div>
 
       {error ? <p className="px-5 text-sm text-[#E11D48]">{error}</p> : null}
 

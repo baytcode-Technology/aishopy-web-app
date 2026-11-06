@@ -28,15 +28,13 @@ export function CatalogHeader({
 
   return (
     <header className="bg-surface px-5 pb-3 pt-1">
-      <div className="relative">
+      <div>
         {!showBack ? (
-          <div className="pointer-events-none absolute left-0 right-0 top-0 hidden justify-center max-lg:flex">
+          <div className="mb-3 hidden justify-center max-lg:flex">
             <AppLogo href="" />
           </div>
         ) : null}
-        <div
-          className={`flex items-start justify-between gap-3 ${!showBack ? 'max-lg:mt-5' : ''}`}
-        >
+        <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1 pr-3">
             {showBack ? (
               backHref ? (
