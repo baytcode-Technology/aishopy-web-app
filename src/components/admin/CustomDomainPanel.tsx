@@ -33,11 +33,11 @@ function statusLabel(status: CustomDomainStatus | undefined): string {
 function statusChipClass(status: CustomDomainStatus | undefined): string {
   switch (status) {
     case 'active':
-      return 'bg-emerald-50 text-emerald-800 ring-emerald-200'
+      return 'bg-success-bg text-success ring-success-border'
     case 'pending':
-      return 'bg-amber-50 text-amber-800 ring-amber-200'
+      return 'bg-warning-bg text-warning ring-gray-200'
     case 'failed':
-      return 'bg-red-50 text-red-700 ring-red-200'
+      return 'bg-danger-bg text-danger ring-danger-border'
     default:
       return 'bg-gray-100 text-gray-600 ring-gray-200'
   }
@@ -143,19 +143,23 @@ export function CustomDomainPanel() {
       </div>
 
       {error ? (
-        <p className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-[13px] text-red-700">{error}</p>
+        <p className="mt-3 rounded-xl bg-danger-bg px-4 py-3 text-[13px] text-danger ring-1 ring-danger-border">
+          {error}
+        </p>
       ) : null}
       {notice ? (
-        <p className="mt-3 rounded-xl bg-emerald-50 px-4 py-3 text-[13px] text-emerald-800">{notice}</p>
+        <p className="mt-3 rounded-xl bg-success-bg px-4 py-3 text-[13px] text-success ring-1 ring-success-border">
+          {notice}
+        </p>
       ) : null}
 
       {isActive && view?.custom_domain ? (
-        <div className="mt-4 rounded-2xl bg-emerald-50 px-4 py-4 ring-1 ring-emerald-200">
-          <p className="text-[13px] font-medium text-emerald-900">Your store is live at</p>
-          <p className="mt-1 break-all text-[16px] font-semibold text-emerald-950">
+        <div className="mt-4 rounded-2xl bg-success-bg px-4 py-4 ring-1 ring-success-border">
+          <p className="text-[13px] font-medium text-success">Your store is live at</p>
+          <p className="mt-1 break-all text-[16px] font-semibold text-success">
             https://{view.custom_domain}
           </p>
-          <p className="mt-2 text-[13px] leading-5 text-emerald-800">
+          <p className="mt-2 text-[13px] leading-5 text-gray-600">
             Your AiShopy subdomain still works as a backup.
           </p>
         </div>
@@ -169,7 +173,7 @@ export function CustomDomainPanel() {
             value={domainInput}
             onChange={(event) => setDomainInput(event.target.value)}
             placeholder="shop.yourbrand.com"
-            className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-[15px] text-ink outline-none focus:border-ink"
+            className="w-full rounded-xl border border-gray-200 bg-surface px-4 py-3 text-[15px] text-ink outline-none focus:border-ink"
             autoCapitalize="none"
             autoCorrect="off"
             spellCheck={false}
