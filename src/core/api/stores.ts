@@ -76,6 +76,9 @@ export type CustomDomainView = {
   verified_at: string | null
   cname_host: string
   cname_target: string
+  dns_type?: 'A' | 'CNAME'
+  dns_name?: string
+  dns_value?: string
 }
 
 type CustomDomainResponse = {

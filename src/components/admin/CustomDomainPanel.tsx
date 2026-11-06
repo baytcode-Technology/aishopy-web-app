@@ -198,20 +198,24 @@ export function CustomDomainPanel() {
         <div className="mt-4 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-4">
           <p className="text-[14px] font-semibold text-ink">Add this DNS record</p>
           <p className="mt-1 text-[13px] leading-5 text-gray-600">
-            Add this CNAME at your domain host, then tap Verify.
+            On your domain page, fill the same boxes. Leave TTL as it is, then come back and tap Verify.
           </p>
           <dl className="mt-3 space-y-2 text-[13px]">
             <div className="flex items-baseline justify-between gap-3">
               <dt className="text-gray-500">Type</dt>
-              <dd className="font-mono font-semibold text-ink">CNAME</dd>
+              <dd className="font-mono font-semibold text-ink">{view.dns_type ?? 'CNAME'}</dd>
             </div>
             <div className="flex items-baseline justify-between gap-3">
-              <dt className="text-gray-500">Host</dt>
-              <dd className="break-all text-right font-mono font-semibold text-ink">{view.cname_host}</dd>
+              <dt className="text-gray-500">Name</dt>
+              <dd className="break-all text-right font-mono font-semibold text-ink">
+                {view.dns_name ?? view.cname_host}
+              </dd>
             </div>
             <div className="flex items-baseline justify-between gap-3">
               <dt className="text-gray-500">Value</dt>
-              <dd className="break-all text-right font-mono font-semibold text-ink">{view.cname_target}</dd>
+              <dd className="break-all text-right font-mono font-semibold text-ink">
+                {view.dns_value ?? view.cname_target}
+              </dd>
             </div>
           </dl>
         </div>
@@ -227,7 +231,7 @@ export function CustomDomainPanel() {
               run(
                 'save',
                 () => saveCustomDomain(storeId!, domainInput.trim()),
-                'Domain saved. Add the CNAME, then verify.',
+                'Domain saved. Add the record below, then verify.',
               )
             }
           />
@@ -242,7 +246,7 @@ export function CustomDomainPanel() {
                 data.status === 'active'
                   ? { text: 'Your domain is live.', tone: 'ok' }
                   : {
-                      text: 'CNAME was not found yet. Add the record, then verify again.',
+                      text: 'The DNS record was not found yet. Add it, then verify again.',
                       tone: 'warn',
                     },
               )
