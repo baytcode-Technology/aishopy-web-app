@@ -103,7 +103,7 @@ export default function AdminDashboardPage() {
           />
 
           {domainOpen && premium ? (
-            <div className="mt-3 overflow-hidden rounded-2xl border border-gray-200 bg-white">
+            <div className="mt-3 overflow-hidden rounded-2xl border border-gray-200 bg-surface">
               <div className="border-b border-gray-100 px-5 py-4">
                 <p className="mb-1.5 text-[10px] uppercase tracking-widest text-gray-400">
                   Current domain
