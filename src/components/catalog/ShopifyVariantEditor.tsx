@@ -13,6 +13,7 @@ type Props = {
   variants: GeneratedVariant[]
   onChange: (options: VariantOption[], variants: GeneratedVariant[]) => void
   showVariantImages?: boolean
+  basePrice?: string | number
 }
 
 const inputClass =
@@ -25,7 +26,9 @@ export function ShopifyVariantEditor({
   variants,
   onChange,
   showVariantImages = true,
+  basePrice,
 }: Props) {
+  const pricePlaceholder = basePrice === undefined || basePrice === '' ? undefined : String(basePrice)
   const [expanded, setExpanded] = useState(true)
   const comboCount = useMemo(() => variants.length, [variants.length])
 
@@ -149,9 +152,10 @@ export function ShopifyVariantEditor({
                   <p className="text-sm font-bold text-ink">{v.name}</p>
                   <div className="flex flex-wrap gap-2">
                     <MiniField
-                      label="+Price"
-                      value={v.priceDelta}
-                      onChange={(priceDelta) => updateVariant(v.id, { priceDelta })}
+                      label="Price"
+                      value={v.price}
+                      onChange={(price) => updateVariant(v.id, { price })}
+                      placeholder={pricePlaceholder}
                     />
                     <MiniField
                       label="Compare at"

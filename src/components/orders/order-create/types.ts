@@ -3,6 +3,7 @@ import {
   effectiveVariantStockQty,
   tracksVariantStock,
 } from '@/core/lib/product-inventory'
+import { variantSellingPrice } from '@/core/lib/variant-price'
 import type { Product, ProductVariant } from '@/core/types/product'
 
 export type CartLine = {
@@ -19,7 +20,7 @@ export function cartLineKey(productId: number, variantId: number | null): string
 }
 
 export function unitPrice(product: Product, variant: ProductVariant | null): number {
-  return Number(product.base_price) + Number(variant?.price_delta ?? 0)
+  return variantSellingPrice(product.base_price, variant)
 }
 
 export function stockForLine(line: CartLine): number | null {

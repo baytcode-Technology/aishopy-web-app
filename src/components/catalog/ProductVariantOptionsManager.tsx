@@ -17,6 +17,7 @@ type Props = {
   generatedVariants: GeneratedVariant[]
   onChange: (options: VariantOption[], generated: GeneratedVariant[]) => void
   showTitle?: boolean
+  basePrice?: string | number
 }
 
 const inputClass =
@@ -30,7 +31,9 @@ export function ProductVariantOptionsManager({
   generatedVariants,
   onChange,
   showTitle = true,
+  basePrice,
 }: Props) {
+  const pricePlaceholder = basePrice === undefined || basePrice === '' ? undefined : String(basePrice)
   const [expanded, setExpanded] = useState(true)
 
   const existingKeys = useMemo(() => {
@@ -212,9 +215,10 @@ export function ProductVariantOptionsManager({
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <MiniField
-                        label="+Price"
-                        value={v.priceDelta}
-                        onChange={(priceDelta) => updateVariant(v.id, { priceDelta })}
+                        label="Price"
+                        value={v.price}
+                        onChange={(price) => updateVariant(v.id, { price })}
+                        placeholder={pricePlaceholder}
                       />
                       <MiniField
                         label="Compare at"

@@ -58,6 +58,7 @@ export function CustomDomainPanel() {
   const [busy, setBusy] = useState<BusyAction | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  const [noticeTone, setNoticeTone] = useState<'ok' | 'warn'>('ok')
 
   const load = useCallback(async () => {
     if (!storeId) return
@@ -78,7 +79,11 @@ export function CustomDomainPanel() {
     void load()
   }, [load])
 
-  const run = async (action: BusyAction, fn: () => Promise<CustomDomainView>, success: string) => {
+  const run = async (
+    action: BusyAction,
+    fn: () => Promise<CustomDomainView>,
+    success: string | ((data: CustomDomainView) => { text: string; tone: 'ok' | 'warn' }),
+  ) => {
     if (!storeId || busy) return
     setBusy(action)
     setError(null)
@@ -88,7 +93,9 @@ export function CustomDomainPanel() {
       setView(data)
       if (data.custom_domain) setDomainInput(data.custom_domain)
       else setDomainInput('')
-      setNotice(success)
+      const result = typeof success === 'function' ? success(data) : { text: success, tone: 'ok' as const }
+      setNotice(result.text)
+      setNoticeTone(result.tone)
       await refreshStore()
     } catch (err) {
       setError(getErrorMessage(err, 'Domain update failed'))
@@ -148,7 +155,13 @@ export function CustomDomainPanel() {
         </p>
       ) : null}
       {notice ? (
-        <p className="mt-3 rounded-xl bg-success-bg px-4 py-3 text-[13px] text-success ring-1 ring-success-border">
+        <p
+          className={`mt-3 rounded-xl px-4 py-3 text-[13px] ring-1 ${
+            noticeTone === 'warn'
+              ? 'bg-warning-bg text-warning ring-gray-200'
+              : 'bg-success-bg text-success ring-success-border'
+          }`}
+        >
           {notice}
         </p>
       ) : null}
@@ -224,7 +237,16 @@ export function CustomDomainPanel() {
             label="Verify domain"
             loading={busy === 'verify'}
             disabled={Boolean(busy)}
-            onClick={() => run('verify', () => verifyCustomDomain(storeId!), 'Checked DNS')}
+            onClick={() =>
+              run('verify', () => verifyCustomDomain(storeId!), (data) =>
+                data.status === 'active'
+                  ? { text: 'Your domain is live.', tone: 'ok' }
+                  : {
+                      text: 'CNAME was not found yet. Add the record, then verify again.',
+                      tone: 'warn',
+                    },
+              )
+            }
           />
         ) : null}
         {view?.custom_domain ? (

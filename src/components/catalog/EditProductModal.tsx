@@ -93,7 +93,7 @@ export function EditProductModal({
     setImageError('')
     setLocalError('')
     if (initialVariants.length > 0) {
-      const hydrated = hydrateVariantEditorState(initialVariants)
+      const hydrated = hydrateVariantEditorState(initialVariants, Number(product.base_price))
       setVariantOptions(hydrated.options)
       setGeneratedVariants(hydrated.generated)
     } else {
@@ -303,6 +303,7 @@ export function EditProductModal({
               existingVariants={initialVariants}
               options={variantOptions}
               generatedVariants={generatedVariants}
+              basePrice={basePrice}
               onChange={(nextOptions, nextGenerated) => {
                 setVariantOptions(nextOptions)
                 setGeneratedVariants(nextGenerated)
@@ -312,6 +313,7 @@ export function EditProductModal({
             <ShopifyVariantEditor
               options={variantOptions}
               variants={generatedVariants}
+              basePrice={basePrice}
               onChange={(nextOptions, nextGenerated) => {
                 setVariantOptions(nextOptions)
                 setGeneratedVariants(nextGenerated)
