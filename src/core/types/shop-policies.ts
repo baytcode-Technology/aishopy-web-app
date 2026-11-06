@@ -9,6 +9,7 @@ export type ShopPolicies = {
   next_day_delivery: boolean
   service_area: string | null
   return_days: number | null
+  returns_allowed: boolean | null
   exchange_allowed: boolean
   refund_days_after_cancel: number | null
   return_note: string | null
@@ -27,6 +28,7 @@ export const EMPTY_SHOP_POLICIES: ShopPolicies = {
   next_day_delivery: false,
   service_area: null,
   return_days: null,
+  returns_allowed: null,
   exchange_allowed: false,
   refund_days_after_cancel: null,
   return_note: null,
@@ -56,6 +58,8 @@ export function parseShopPolicies(raw: unknown): ShopPolicies {
     next_day_delivery: record.next_day_delivery === true,
     service_area: str(record.service_area),
     return_days: num(record.return_days),
+    returns_allowed:
+      record.returns_allowed === true ? true : record.returns_allowed === false ? false : null,
     exchange_allowed: record.exchange_allowed === true,
     refund_days_after_cancel: num(record.refund_days_after_cancel),
     return_note: str(record.return_note),
