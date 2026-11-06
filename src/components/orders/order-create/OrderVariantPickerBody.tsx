@@ -44,7 +44,7 @@ export function OrderVariantPickerBody({
             <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-gray-100">
               {imageUri ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={imageUri} alt="" className="h-12 w-12 object-cover" />
+                <img src={imageUri} alt="" className="h-12 w-12 object-contain" />
               ) : (
                 <span className="text-gray-400">▢</span>
               )}

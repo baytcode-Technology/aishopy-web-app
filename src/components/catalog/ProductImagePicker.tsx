@@ -58,7 +58,8 @@ export function ProductImagePicker({ images, thumbnailId, onChange, error }: Pro
     <div className="flex flex-col gap-2">
       <p className="text-[13px] font-bold tracking-wide text-gray-600">Product images *</p>
       <p className="text-xs text-gray-500">
-        Add up to {MAX_PRODUCT_IMAGES} images. Tap an image to set it as thumbnail.
+        Add up to {MAX_PRODUCT_IMAGES} images. Tap an image to set it as thumbnail. Use the full
+        product photo — the store shows the whole image.
       </p>
       <div className="flex gap-2.5 overflow-x-auto pb-1">
         {images.length < MAX_PRODUCT_IMAGES ? (
@@ -83,7 +84,7 @@ export function ProductImagePicker({ images, thumbnailId, onChange, error }: Pro
                 }`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={image.uri} alt="" className="h-full w-full object-cover" />
+                <img src={image.uri} alt="" className="h-full w-full object-contain" />
                 {isThumb ? (
                   <span className="absolute inset-x-0 bottom-0 bg-ink py-0.5 text-center text-[9px] font-bold uppercase text-white">
                     Thumbnail

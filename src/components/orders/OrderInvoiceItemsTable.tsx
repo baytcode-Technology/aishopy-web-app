@@ -42,7 +42,7 @@ export function OrderInvoiceItemsTable({ items, currency }: Props) {
             <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-100">
               {thumbnailUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={thumbnailUrl} alt="" className="h-full w-full object-cover" />
+                <img src={thumbnailUrl} alt="" className="h-full w-full object-contain" />
               ) : (
                 <span className="text-gray-400">▢</span>
               )}

@@ -24,7 +24,7 @@ export function ProductListRow({ product }: { product: Product }) {
       <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-100">
         {product.thumbnail_url ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={product.thumbnail_url} alt="" className="h-12 w-12 object-cover" />
+          <img src={product.thumbnail_url} alt="" className="h-12 w-12 object-contain" />
         ) : (
           <EmptyThumb />
         )}

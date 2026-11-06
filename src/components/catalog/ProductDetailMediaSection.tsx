@@ -129,7 +129,7 @@ export function ProductDetailMediaSection({ product, storeId, onProductUpdated, 
               className="relative h-[88px] w-[88px] shrink-0 overflow-hidden rounded-xl border border-gray-200 bg-gray-100"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={item.uri} alt="" className="h-full w-full object-cover" />
+              <img src={item.uri} alt="" className="h-full w-full object-contain" />
               {item.pending ? (
                 <span className="absolute left-1 top-1 rounded bg-orange-500 px-1 py-0.5 text-[8px] font-bold text-white">
                   NEW

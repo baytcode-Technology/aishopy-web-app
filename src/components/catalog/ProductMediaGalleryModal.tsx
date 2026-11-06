@@ -154,7 +154,7 @@ export function ProductMediaGalleryModal({
                 }`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={item.uri} alt="" className="h-full w-full object-cover" />
+                <img src={item.uri} alt="" className="h-full w-full object-contain" />
                 {item.pending ? (
                   <span className="absolute left-1 top-1 rounded bg-orange-500 px-1.5 py-0.5 text-[9px] font-bold text-white">
                     NEW

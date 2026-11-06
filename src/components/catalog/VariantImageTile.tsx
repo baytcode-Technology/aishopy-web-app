@@ -50,7 +50,7 @@ export function VariantImageTile({
       >
         {imageUri ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageUri} alt="" className="h-full w-full object-cover" />
+          <img src={imageUri} alt="" className="h-full w-full object-contain" />
         ) : (
           <span
             className="flex h-full items-center justify-center font-semibold text-gray-400"

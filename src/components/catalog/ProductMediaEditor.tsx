@@ -68,7 +68,7 @@ export function ProductMediaEditor({ items, thumbnailId, onChange, error }: Prop
                 }`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={img.uri} alt="" className="h-full w-full object-cover" />
+                <img src={img.uri} alt="" className="h-full w-full object-contain" />
                 {isThumb ? (
                   <span className="absolute inset-x-0 bottom-0 bg-ink py-0.5 text-center text-[9px] font-bold uppercase text-white">
                     Thumbnail
