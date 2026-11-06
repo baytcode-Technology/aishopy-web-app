@@ -41,7 +41,7 @@ export function OrderCartLine({ line, currency, onQuantityChange, onRemove }: Pr
           <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-gray-100">
             {imageUri ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={imageUri} alt="" className="h-14 w-14 object-cover" />
+              <img src={imageUri} alt="" className="h-14 w-14 object-contain" />
             ) : (
               <span className="text-gray-400">▢</span>
             )}
