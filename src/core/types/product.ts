@@ -39,6 +39,7 @@ export type ProductVariant = {
   product_id: number
   name: string
   options: Record<string, unknown>
+  price: number | null
   price_delta: number
   compare_at_price: number | null
   stock_qty: number
@@ -52,6 +53,7 @@ export type ProductVariant = {
 
 export type CreateProductVariantPayload = {
   name: string
+  price?: number | null
   price_delta?: number
   compare_at_price?: number | null
   stock_qty?: number
@@ -66,7 +68,8 @@ export type CreateProductVariantPayload = {
 
 export type UpdateProductVariantPayload = Partial<{
   name: string
-  price_delta: number
+  price?: number | null
+  price_delta?: number
   compare_at_price: number | null
   stock_qty: number
   mark_as_sold: boolean

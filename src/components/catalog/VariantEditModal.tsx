@@ -9,6 +9,7 @@ import { createProductVariant, updateProductVariant } from '@/core/api/products'
 import { getErrorMessage } from '@/core/lib/api-error'
 import { currencySymbol } from '@/core/lib/format-money'
 import { parseOptionalPrice } from '@/core/lib/parse-optional-price'
+import { parseVariantPrice, variantPriceDraft } from '@/core/lib/variant-price'
 import type { Product, ProductVariant } from '@/core/types/product'
 import { uploadProductImages } from '@/platform/upload-images'
 import { useEffect, useState, type ReactNode } from 'react'
@@ -35,7 +36,7 @@ export function VariantEditModal({
   onMessage,
 }: Props) {
   const symbol = currencySymbol(currency)
-  const unitPrice = variant ? Number(product.base_price) + Number(variant.price_delta) : Number(product.base_price)
+  const pricePlaceholder = String(product.base_price)
 
   const [nameDraft, setNameDraft] = useState('')
   const [priceDraft, setPriceDraft] = useState('')
@@ -54,7 +55,7 @@ export function VariantEditModal({
   useEffect(() => {
     if (!open) return
     setNameDraft(variant?.name ?? '')
-    setPriceDraft(String(unitPrice || 0))
+    setPriceDraft(variantPriceDraft(variant, Number(product.base_price)))
     setCompareAtPriceDraft(variant?.compare_at_price != null ? String(variant.compare_at_price) : '')
     setStockDraft(String(variant?.stock_qty ?? 0))
     setSkuDraft(variant?.sku ?? '')
@@ -75,7 +76,8 @@ export function VariantEditModal({
     variant?.mark_as_sold,
     variant?.mark_as_non_inventory,
     variant?.image_url,
-    unitPrice,
+    variant?.price,
+    product.base_price,
   ])
 
   useEffect(() => {
@@ -89,13 +91,15 @@ export function VariantEditModal({
   }
 
   const save = async () => {
-    const price = Number(priceDraft)
     const stock = Number(stockDraft)
     if (mode === 'add' && !nameDraft.trim()) {
       setLocalError('Variant name is required')
       return
     }
-    if (!Number.isFinite(price) || price < 0) {
+    let price: number | null
+    try {
+      price = parseVariantPrice(priceDraft)
+    } catch {
       setLocalError('Enter a valid price')
       return
     }
@@ -109,7 +113,6 @@ export function VariantEditModal({
       return
     }
 
-    const price_delta = price - Number(product.base_price)
     setSaving(true)
     setLocalError(null)
     try {
@@ -124,7 +127,7 @@ export function VariantEditModal({
 
       if (mode === 'edit' && variant) {
         const res = await updateProductVariant(product.id, variant.id, {
-          price_delta,
+          price,
           compare_at_price: compareAtPrice,
           stock_qty: stock,
           sku: skuDraft.trim() || null,
@@ -137,7 +140,7 @@ export function VariantEditModal({
       } else {
         const res = await createProductVariant(product.id, {
           name: nameDraft.trim(),
-          price_delta,
+          price,
           compare_at_price: compareAtPrice,
           stock_qty: stock,
           sku: skuDraft.trim() || undefined,
@@ -202,9 +205,10 @@ export function VariantEditModal({
             <input
               value={priceDraft}
               onChange={(e) => setPriceDraft(e.target.value)}
+              placeholder={pricePlaceholder}
               inputMode="decimal"
               disabled={saving}
-              className="w-full bg-transparent py-3 text-base font-bold text-ink outline-none"
+              className="w-full bg-transparent py-3 text-base font-bold text-ink outline-none placeholder:font-medium placeholder:text-gray-400"
             />
           </div>
         </Field>

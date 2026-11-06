@@ -9,6 +9,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { deleteProductVariant, updateProductVariant } from '@/core/api/products'
 import { getErrorMessage } from '@/core/lib/api-error'
 import { formatMoney } from '@/core/lib/format-money'
+import { variantSellingPrice } from '@/core/lib/variant-price'
 import {
   getVariantAvailabilityLabel,
   getVariantCardInventoryFlags,
@@ -48,7 +49,7 @@ export function VariantEditableCard({
   const displayActive = optimisticActive ?? variant.is_active
   const status = displayActive ? 'active' : 'unlisted'
   const cardLocked = busy || deleteLoading || imageBusy
-  const unitPrice = Number(product.base_price) + Number(variant.price_delta)
+  const unitPrice = variantSellingPrice(product.base_price, variant)
   const availabilityLabel = getVariantAvailabilityLabel(product, variant)
   const { showSoldOut, showNonInventory } = getVariantCardInventoryFlags(product, variant)
   const optionLabels = Object.entries(variant.options ?? {})
