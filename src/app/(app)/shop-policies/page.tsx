@@ -48,6 +48,7 @@ export default function ShopPoliciesPage() {
   const [nextDay, setNextDay] = useState(false)
   const [serviceArea, setServiceArea] = useState('')
   const [returnDays, setReturnDays] = useState('')
+  const [returnsAllowed, setReturnsAllowed] = useState<boolean | null>(null)
   const [exchangeAllowed, setExchangeAllowed] = useState(false)
   const [refundDays, setRefundDays] = useState('')
   const [returnNote, setReturnNote] = useState('')
@@ -67,6 +68,7 @@ export default function ShopPoliciesPage() {
     setNextDay(p.next_day_delivery)
     setServiceArea(p.service_area ?? '')
     setReturnDays(numField(p.return_days))
+    setReturnsAllowed(p.returns_allowed)
     setExchangeAllowed(p.exchange_allowed)
     setRefundDays(numField(p.refund_days_after_cancel))
     setReturnNote(p.return_note ?? '')
@@ -91,6 +93,7 @@ export default function ShopPoliciesPage() {
           next_day_delivery: nextDay,
           service_area: serviceArea,
           return_days: returnDays,
+          returns_allowed: returnsAllowed,
           exchange_allowed: exchangeAllowed,
           refund_days_after_cancel: refundDays,
           return_note: returnNote,
@@ -156,6 +159,30 @@ export default function ShopPoliciesPage() {
           onChange={(e) => setServiceArea(e.target.value)}
           placeholder="Kerala"
         />
+        <div className="flex flex-col gap-2">
+          <p className="text-[13px] font-bold tracking-wide text-gray-600">Returns</p>
+          <div className="grid grid-cols-3 gap-2">
+            {(
+              [
+                ['Not set', null],
+                ['Yes', true],
+                ['No', false],
+              ] as const
+            ).map(([label, value]) => {
+              const selected = returnsAllowed === value
+              return (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => setReturnsAllowed(value)}
+                  className={`rounded-2xl border px-3 py-3 text-[13px] font-bold ${selected ? 'border-brand-primary bg-brand-primary text-white' : 'border-gray-200 bg-surface text-gray-700'}`}
+                >
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
         <Input
           label="Return window (days)"
           value={returnDays}
