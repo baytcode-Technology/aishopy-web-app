@@ -43,10 +43,78 @@ function statusChipClass(status: CustomDomainStatus | undefined): string {
   }
 }
 
+function CopyRow({ label, value }: { label: string; value: string }) {
+  const [copied, setCopied] = useState(false)
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-surface px-3 py-2.5">
+      <div className="min-w-0">
+        <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">{label}</p>
+        <p className="truncate font-mono text-[14px] font-semibold text-ink">{value}</p>
+      </div>
+      <button
+        type="button"
+        className="shrink-0 rounded-full bg-gray-100 px-3 py-1.5 text-[12px] font-semibold text-ink"
+        onClick={() => {
+          void navigator.clipboard.writeText(value).then(() => {
+            setCopied(true)
+            window.setTimeout(() => setCopied(false), 1500)
+          })
+        }}
+      >
+        {copied ? 'Copied' : 'Copy'}
+      </button>
+    </div>
+  )
+}
+
 function currentStepIndex(view: CustomDomainView | null, domainInput: string): number {
   if (view?.status === 'active') return 3
   if (!view?.custom_domain) return domainInput.trim() ? 1 : 0
   return 2
+}
+
+function DomainSteps({
+  dnsType,
+  dnsName,
+  dnsValue,
+}: {
+  dnsType: string
+  dnsName: string
+  dnsValue: string
+}) {
+  const showParked = dnsType === 'A' && dnsName === '@'
+  const steps = [
+    'Open the place where you bought the domain.',
+    ...(showParked
+      ? ['Delete the row that says A, @, Parked. Leave every other row.']
+      : []),
+    'Add this record if it is not already there.',
+    'Come back here and tap Verify.',
+  ]
+  return (
+    <div className="mt-4 rounded-2xl border border-gray-200 bg-gray-100 px-4 py-4">
+      <ol className="space-y-3">
+        {steps.map((text, index) => (
+          <li key={text} className="flex gap-3">
+            <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-surface text-[11px] font-semibold text-ink">
+              {index + 1}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-[13px] leading-5 text-ink">{text}</p>
+              {text.startsWith('Add this record') ? (
+                <div className="mt-2 space-y-2">
+                  <CopyRow label="Type" value={dnsType} />
+                  <CopyRow label="Name" value={dnsName} />
+                  <CopyRow label="Value" value={dnsValue} />
+                  <p className="text-[12px] leading-5 text-gray-600">Leave TTL as it is.</p>
+                </div>
+              ) : null}
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  )
 }
 
 export function CustomDomainPanel() {
@@ -195,30 +263,11 @@ export function CustomDomainPanel() {
       )}
 
       {view?.custom_domain && !isActive ? (
-        <div className="mt-4 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-4">
-          <p className="text-[14px] font-semibold text-ink">Add this DNS record</p>
-          <p className="mt-1 text-[13px] leading-5 text-gray-600">
-            On your domain page, fill the same boxes. Leave TTL as it is, then come back and tap Verify.
-          </p>
-          <dl className="mt-3 space-y-2 text-[13px]">
-            <div className="flex items-baseline justify-between gap-3">
-              <dt className="text-gray-500">Type</dt>
-              <dd className="font-mono font-semibold text-ink">{view.dns_type ?? 'CNAME'}</dd>
-            </div>
-            <div className="flex items-baseline justify-between gap-3">
-              <dt className="text-gray-500">Name</dt>
-              <dd className="break-all text-right font-mono font-semibold text-ink">
-                {view.dns_name ?? view.cname_host}
-              </dd>
-            </div>
-            <div className="flex items-baseline justify-between gap-3">
-              <dt className="text-gray-500">Value</dt>
-              <dd className="break-all text-right font-mono font-semibold text-ink">
-                {view.dns_value ?? view.cname_target}
-              </dd>
-            </div>
-          </dl>
-        </div>
+        <DomainSteps
+          dnsType={view.dns_type ?? 'CNAME'}
+          dnsName={view.dns_name ?? view.cname_host}
+          dnsValue={view.dns_value ?? view.cname_target}
+        />
       ) : null}
 
       <div className="mt-4 flex flex-col gap-2">
