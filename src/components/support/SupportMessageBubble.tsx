@@ -5,12 +5,14 @@ import type { SupportMessage } from '@/core/types/support'
 
 type Props = {
   message: SupportMessage
+  viewer?: 'owner' | 'admin'
 }
 
-export function SupportMessageBubble({ message }: Props) {
+export function SupportMessageBubble({ message, viewer = 'owner' }: Props) {
   const isUser = message.role === 'user'
   const isAdmin = message.role === 'admin'
   const isSystem = message.role === 'system'
+  const mine = viewer === 'admin' ? message.role === 'admin' || message.role === 'assistant' : isUser
 
   if (isSystem) {
     return (
@@ -27,19 +29,26 @@ export function SupportMessageBubble({ message }: Props) {
   }
 
   return (
-    <div className={`mb-3 max-w-[82%] ${isUser ? 'ml-auto' : 'mr-auto'}`}>
+    <div className={`mb-3 max-w-[82%] ${mine ? 'ml-auto' : 'mr-auto'}`}>
       {isAdmin ? (
-        <p className="mb-1 ml-1 text-[10px] uppercase tracking-wider text-brand-green">AiShopy team</p>
+        <p className={`mb-1 text-[10px] uppercase tracking-wider text-brand-green ${mine ? 'mr-1 text-right' : 'ml-1'}`}>
+          AiShopy team
+        </p>
       ) : null}
       <div
         className={`flex flex-col gap-1 rounded-2xl px-3.5 py-2.5 ${
-          isUser ? 'bg-brand-green' : 'border border-gray-200 bg-surface'
+          mine ? 'bg-brand-green' : 'border border-gray-200 bg-surface'
         }`}
       >
         {isUser ? (
-          <p className="text-[15px] leading-[21px] text-brand-on-primary">{message.content}</p>
+          <p className={`text-[15px] leading-[21px] ${mine ? 'text-brand-on-primary' : 'text-ink'}`}>
+            {message.content}
+          </p>
         ) : (
-          <FormattedMessageText text={message.content} className="text-[15px] leading-[21px] text-ink" />
+          <FormattedMessageText
+            text={message.content}
+            className={`text-[15px] leading-[21px] ${mine ? 'text-brand-on-primary' : 'text-ink'}`}
+          />
         )}
         <p className="self-end text-[12px] text-gray-400">{message.time}</p>
       </div>
