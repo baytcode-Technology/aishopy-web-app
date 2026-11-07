@@ -1,5 +1,5 @@
-import { env } from '@/core/config/env'
 import { formatMoney } from '@/core/lib/format-money'
+import { storefrontAddress } from '@/core/lib/storefront'
 import { formatOrderNumber } from '@/core/lib/order-status'
 import type { CreateOrderShippingAddress, Order, OrderItem } from '@/core/types/order'
 import type { Store } from '@/core/types/store'
@@ -21,8 +21,8 @@ export function formatOrderInvoiceDate(iso: string): string {
   return `${date} ${time}`
 }
 
-export function formatStorefrontHost(slug: string): string {
-  return `${slug}.${env.storefrontBaseDomain}`
+export function formatStorefrontHost(store: Store): string {
+  return storefrontAddress(store)?.host ?? store.slug
 }
 
 /** Placeholder until store WhatsApp editing is available in the app. */
@@ -193,7 +193,7 @@ function escapeHtml(value: string): string {
 
 export function buildInvoiceHtml({ order, store }: InvoiceContext): string {
   const currency = store.currency
-  const host = formatStorefrontHost(store.slug)
+  const host = formatStorefrontHost(store)
   const whatsapp = formatStoreWhatsApp(store)
   const channel = getOrderChannelLabel(order)
   const addressLines = !isPosOrder(order) ? formatShippingAddress(order.shipping_address) : []
@@ -256,7 +256,7 @@ export function buildInvoicePlainText({ order, store }: InvoiceContext): string 
   const currency = store.currency
   const lines: string[] = [
     store.name,
-    formatStorefrontHost(store.slug),
+    formatStorefrontHost(store),
     formatStoreWhatsApp(store),
     '',
     `Invoice No: ${formatOrderNumber(order.order_number)}`,

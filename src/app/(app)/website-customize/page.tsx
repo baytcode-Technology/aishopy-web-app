@@ -5,9 +5,8 @@ import { StorefrontUrlActions } from '@/components/store/StorefrontUrlActions'
 import { Button } from '@/components/ui/Button'
 import { MenuIcon } from '@/components/ui/MenuIcons'
 import { updateMyStore } from '@/core/api/stores'
-import { env } from '@/core/config/env'
 import { getErrorMessage } from '@/core/lib/api-error'
-import { buildSubdomainUrl } from '@/core/lib/storefront'
+import { buildSubdomainUrl, storefrontAddress } from '@/core/lib/storefront'
 import {
   DARK_SURFACE,
   DEFAULT_PRIMARY,
@@ -516,8 +515,9 @@ export default function WebsiteCustomizePage() {
     router.push(`/template-preview?${params.toString()}`)
   }
 
-  const storefrontHost = store?.slug ? `${store.slug}.${env.storefrontBaseDomain}` : null
-  const storefrontUrl = subdomainUrl ?? (store?.slug ? buildSubdomainUrl(store.slug) : null)
+  const address = storefrontAddress(store)
+  const storefrontHost = address?.host ?? null
+  const storefrontUrl = address?.url ?? subdomainUrl
 
   return (
     <main className="min-h-full bg-gray-100">

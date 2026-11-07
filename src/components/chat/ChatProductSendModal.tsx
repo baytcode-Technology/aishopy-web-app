@@ -25,7 +25,11 @@ type Props = {
   storeId: number
   storeSlug: string
   currency?: string
-  store?: { custom_domain?: string | null; custom_domain_status?: string | null } | null
+  store?: {
+    custom_domain?: string | null
+    custom_domain_status?: string | null
+    public_link_host?: string | null
+  } | null
   onClose: () => void
   onSend: (payload: ProductShareSendPayload) => void
 }

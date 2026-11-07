@@ -6,6 +6,7 @@ import type { Product, ProductVariant } from '@/core/types/product'
 type StoreShareLink = {
   custom_domain?: string | null
   custom_domain_status?: string | null
+  public_link_host?: string | null
 }
 
 type BuildProductShareMessageInput = {

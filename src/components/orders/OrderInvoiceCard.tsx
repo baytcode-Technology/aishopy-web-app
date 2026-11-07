@@ -101,7 +101,7 @@ export function OrderInvoiceCard({ order, store }: Props) {
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 gap-1 pr-2">
           <p className="text-[20px] font-extrabold leading-tight text-ink">{store.name}</p>
-          <p className="text-[13px] text-gray-500">{formatStorefrontHost(store.slug)}</p>
+          <p className="text-[13px] text-gray-500">{formatStorefrontHost(store)}</p>
           <p className="text-[13px] text-gray-500">{formatStoreWhatsApp(store)}</p>
         </div>
 

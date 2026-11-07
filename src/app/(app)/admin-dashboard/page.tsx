@@ -4,8 +4,8 @@ import { DeleteAccountSection } from '@/components/account/DeleteAccountSection'
 import { CustomDomainPanel } from '@/components/admin/CustomDomainPanel'
 import { CatalogHeader } from '@/components/catalog/CatalogHeader'
 import { LockedMenuRow } from '@/components/ui/LockedMenuRow'
-import { env } from '@/core/config/env'
 import { hasPremiumAccess } from '@/core/lib/subscription'
+import { storefrontAddress } from '@/core/lib/storefront'
 import { useStore } from '@/providers/store-provider'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -22,12 +22,7 @@ export default function AdminDashboardPage() {
 
   if (role === 'staff') return null
 
-  const currentDomain =
-    store?.custom_domain_status === 'active' && store.custom_domain
-      ? store.custom_domain
-      : store?.slug
-        ? `${store.slug}.${env.storefrontBaseDomain}`
-        : '—'
+  const currentDomain = storefrontAddress(store)?.host ?? '—'
 
   const goToSubscription = () => router.push('/subscription')
 
