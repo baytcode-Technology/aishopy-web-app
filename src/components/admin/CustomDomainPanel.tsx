@@ -6,6 +6,7 @@ import {
   deleteCustomDomain,
   fetchCustomDomain,
   saveCustomDomain,
+  setPublicLinkHost,
   verifyCustomDomain,
   type CustomDomainStatus,
   type CustomDomainView,
@@ -15,7 +16,7 @@ import { useCallback, useEffect, useState } from 'react'
 
 const STEPS = ['Enter', 'Save', 'DNS', 'Active'] as const
 
-type BusyAction = 'save' | 'verify' | 'remove'
+type BusyAction = 'save' | 'verify' | 'remove' | 'link'
 
 function statusLabel(status: CustomDomainStatus | undefined): string {
   switch (status) {
@@ -242,6 +243,45 @@ export function CustomDomainPanel() {
           </p>
           <p className="mt-2 text-[13px] leading-5 text-gray-600">
             Your AiShopy subdomain still works as a backup.
+          </p>
+          <p className="mb-2 mt-4 text-[11px] font-semibold uppercase tracking-widest text-gray-400">
+            Link to share
+          </p>
+          <div className="grid grid-cols-2 gap-1 rounded-xl bg-gray-100 p-1">
+            {(
+              [
+                ['custom', 'Custom domain'],
+                ['subdomain', 'AiShopy link'],
+              ] as const
+            ).map(([value, label]) => {
+              const selected = (view.public_link_host ?? 'custom') === value
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  disabled={Boolean(busy) || selected}
+                  onClick={() =>
+                    void run(
+                      'link',
+                      () => setPublicLinkHost(storeId!, value),
+                      value === 'custom'
+                        ? 'Share links now use your custom domain.'
+                        : 'Share links now use your AiShopy link.',
+                    )
+                  }
+                  className={`rounded-lg px-3 py-2.5 text-[13px] font-semibold disabled:opacity-100 ${
+                    selected ? 'bg-ink text-brand-on-primary' : 'text-ink'
+                  }`}
+                >
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+          <p className="mt-2 text-[13px] leading-5 text-gray-600">
+            {(view.public_link_host ?? 'custom') === 'subdomain'
+              ? `https://${view.custom_domain} still opens your store.`
+              : `${view.subdomain} still opens your store.`}
           </p>
         </div>
       ) : (

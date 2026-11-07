@@ -13,8 +13,7 @@ import { MenuRow } from '@/components/ui/MenuRow'
 import { ThemeToggleChip } from '@/components/ui/ThemeToggleChip'
 import { UnreadCountBadge } from '@/components/ui/UnreadCountBadge'
 import { Heading } from '@/components/ui/Typography'
-import { env } from '@/core/config/env'
-import { buildSubdomainUrl } from '@/core/lib/storefront'
+import { buildSubdomainUrl, storefrontAddress } from '@/core/lib/storefront'
 import { getPlanLabel, getStorePlan } from '@/core/lib/subscription'
 import { clearWebPushOnSignOut } from '@/core/lib/sign-out-push'
 import { PRIVACY_POLICY_URL, SUPPORT_EMAIL, TERMS_OF_USE_URL } from '@/core/lib/support-contact'
@@ -63,8 +62,9 @@ export default function SettingsPage() {
     window.location.href = `mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`
   }
 
-  const storefrontHost = store?.slug ? `${store.slug}.${env.storefrontBaseDomain}` : null
-  const storefrontUrl = store?.slug ? buildSubdomainUrl(store.slug) : subdomainUrl
+  const address = storefrontAddress(store)
+  const storefrontHost = address?.host ?? null
+  const storefrontUrl = address?.url ?? subdomainUrl
   const isAdminWithoutStore = isPlatformAdmin && !store
 
   if (adminLoading) {

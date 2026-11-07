@@ -4,8 +4,7 @@ import { CatalogHeader } from '@/components/catalog/CatalogHeader'
 import { StoreAvatar } from '@/components/store/StoreAvatar'
 import { StorePickerList } from '@/components/store/StorePickerList'
 import { StorefrontUrlActions } from '@/components/store/StorefrontUrlActions'
-import { env } from '@/core/config/env'
-import { buildSubdomainUrl } from '@/core/lib/storefront'
+import { storefrontAddress } from '@/core/lib/storefront'
 import type { StoreAccessRole } from '@/core/types/store'
 import { useStore } from '@/providers/store-provider'
 import Link from 'next/link'
@@ -31,8 +30,9 @@ export default function StorefrontPage() {
     void refreshStores()
   }, [refreshStores])
 
-  const storefrontHost = store?.slug ? `${store.slug}.${env.storefrontBaseDomain}` : null
-  const storefrontUrl = subdomainUrl ?? (store?.slug ? buildSubdomainUrl(store.slug) : null)
+  const address = storefrontAddress(store)
+  const storefrontHost = address?.host ?? null
+  const storefrontUrl = address?.url ?? subdomainUrl
 
   const handleSelectStore = async (storeId: number) => {
     if (selectingRef.current) return

@@ -2,7 +2,7 @@
 
 import { StoreAvatar } from '@/components/store/StoreAvatar'
 import { MenuIcon } from '@/components/ui/MenuIcons'
-import { env } from '@/core/config/env'
+import { storefrontAddress } from '@/core/lib/storefront'
 import type { StoreAccessRole, StoreListItem } from '@/core/types/store'
 
 function RoleBadge({ role }: { role: StoreAccessRole }) {
@@ -49,7 +49,7 @@ export function StorePickerList({
   return (
     <div className="overflow-hidden rounded-[28px] border border-gray-200 bg-surface shadow-sm">
       {stores.map((item, index) => {
-        const host = `${item.store.slug}.${env.storefrontBaseDomain}`
+        const host = storefrontAddress(item.store)?.host ?? item.store.slug
         const selected = selectedStoreId === item.store.id
         const wasLastUsed =
           !selected && lastSessionStoreId != null && lastSessionStoreId === item.store.id

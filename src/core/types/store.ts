@@ -59,6 +59,7 @@ export type Store = {
   custom_domain?: string | null
   custom_domain_status?: 'pending' | 'active' | 'failed' | null
   custom_domain_verified_at?: string | null
+  public_link_host?: 'custom' | 'subdomain' | null
   created_at: string
   updated_at: string
 }
