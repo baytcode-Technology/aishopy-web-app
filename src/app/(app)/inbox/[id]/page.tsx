@@ -1050,6 +1050,7 @@ function InboxThreadPageInner() {
           storeId={store.id}
           storeSlug={store.slug}
           currency={store.currency}
+          store={store}
           onClose={() => setProductPickerOpen(false)}
           onSend={(payload) => void sendProductShare(payload)}
         />

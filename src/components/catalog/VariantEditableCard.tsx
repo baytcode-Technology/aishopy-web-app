@@ -9,6 +9,8 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { deleteProductVariant, updateProductVariant } from '@/core/api/products'
 import { getErrorMessage } from '@/core/lib/api-error'
 import { formatMoney } from '@/core/lib/format-money'
+import { shareLink } from '@/core/lib/share-link'
+import { buildStorefrontProductUrl } from '@/core/lib/storefront'
 import { variantSellingPrice } from '@/core/lib/variant-price'
 import {
   getVariantAvailabilityLabel,
@@ -17,6 +19,7 @@ import {
 } from '@/core/lib/product-inventory'
 import type { Product, ProductVariant } from '@/core/types/product'
 import { uploadProductImages } from '@/platform/upload-images'
+import { useStore } from '@/providers/store-provider'
 import { useRef, useState } from 'react'
 
 type Props = {
@@ -36,6 +39,7 @@ export function VariantEditableCard({
   onDeleted,
   onMessage,
 }: Props) {
+  const { store } = useStore()
   const replaceRef = useRef<HTMLInputElement>(null)
   const [editOpen, setEditOpen] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -173,7 +177,7 @@ export function VariantEditableCard({
 
         {optionLabels ? <p className="mb-3 text-[12px] text-gray-500">{optionLabels}</p> : null}
 
-        <div className="flex flex-wrap items-center gap-3 pr-[4.75rem]">
+        <div className="flex flex-wrap items-center gap-3 pr-[7.5rem]">
           <p className="text-[13px] font-extrabold tracking-tight text-ink">
             {variant.compare_at_price != null && variant.compare_at_price > 0 ? (
               <span className="mr-2 text-[12px] font-bold text-gray-400 line-through">
@@ -190,6 +194,24 @@ export function VariantEditableCard({
         </div>
 
         <div className="absolute bottom-3 right-3 flex items-center gap-2">
+          <button
+            type="button"
+            aria-label="Share variant"
+            disabled={cardLocked || !store?.slug}
+            onClick={() => {
+              if (!store?.slug) return
+              const url = buildStorefrontProductUrl(store.slug, product, variant.id, store)
+              const title = `${product.name} — ${variant.name}`
+              void shareLink({ title, url }).then((result) => {
+                if (result === 'copied') onMessage('ok', 'Link copied')
+              })
+            }}
+            className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-surface text-ink disabled:opacity-45"
+          >
+            <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
+            </svg>
+          </button>
           <button
             type="button"
             aria-label="Edit variant"

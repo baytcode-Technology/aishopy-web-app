@@ -15,6 +15,8 @@ import { getErrorMessage } from '@/core/lib/api-error'
 import { formatMoney } from '@/core/lib/format-money'
 import { getProductStockDisplayValue } from '@/core/lib/product-inventory'
 import { getProductStatus } from '@/core/lib/product-status'
+import { shareLink } from '@/core/lib/share-link'
+import { buildStorefrontProductUrl } from '@/core/lib/storefront'
 import type { Category } from '@/core/types/category'
 import type { Product, ProductStatus, ProductVariant } from '@/core/types/product'
 import { useStore } from '@/providers/store-provider'
@@ -117,14 +119,32 @@ export default function ProductDetailPage() {
         title={product.name}
         backHref="/products"
         right={
-          <button
-            type="button"
-            aria-label="Edit product"
-            onClick={() => setFullEditOpen(true)}
-            className="flex h-9 w-9 items-center justify-center rounded-full text-ink"
-          >
-            ✎
-          </button>
+          <div className="flex items-center">
+            <button
+              type="button"
+              aria-label="Share product"
+              onClick={() => {
+                if (!store?.slug) return
+                const url = buildStorefrontProductUrl(store.slug, product, null, store)
+                void shareLink({ title: product.name, url }).then((result) => {
+                  if (result === 'copied') setNotice('Link copied')
+                })
+              }}
+              className="flex h-9 w-9 items-center justify-center rounded-full text-ink"
+            >
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              aria-label="Edit product"
+              onClick={() => setFullEditOpen(true)}
+              className="flex h-9 w-9 items-center justify-center rounded-full text-ink"
+            >
+              ✎
+            </button>
+          </div>
         }
       />
 
