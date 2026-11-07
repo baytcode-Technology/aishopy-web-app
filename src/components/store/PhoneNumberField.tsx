@@ -5,7 +5,7 @@ import { MenuIcon } from '@/components/ui/MenuIcons'
 import { COUNTRY_DIAL_CODES } from '@/core/data/country-dial-codes'
 import type { CountryValue } from '@/core/lib/country-currency'
 import { formatE164, parseE164Phone } from '@/core/lib/parse-phone'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 type Props = {
   value: string
@@ -13,6 +13,8 @@ type Props = {
   label?: string
   error?: string
   resetKey?: string
+  /** Store country. Fills the phone code until the owner picks a different one. */
+  countryCode?: string
 }
 
 export function PhoneNumberField({
@@ -21,26 +23,61 @@ export function PhoneNumberField({
   label = 'Contact number',
   error,
   resetKey,
+  countryCode,
 }: Props) {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [selectedCode, setSelectedCode] = useState('IN')
   const [callingCode, setCallingCode] = useState('91')
   const [nationalNumber, setNationalNumber] = useState('')
+  const phoneCodeTouched = useRef(false)
+  const appliedCountry = useRef<string | null>(null)
+  const nationalRef = useRef('')
+  const onChangeRef = useRef(onChange)
+  onChangeRef.current = onChange
 
   useEffect(() => {
+    phoneCodeTouched.current = false
+    appliedCountry.current = null
+  }, [resetKey])
+
+  useEffect(() => {
+    if (!value.trim()) {
+      nationalRef.current = ''
+      setNationalNumber('')
+      return
+    }
     const parsed = parseE164Phone(value)
+    nationalRef.current = parsed.national
     setSelectedCode(parsed.countryCode)
     setCallingCode(parsed.callingCode)
     setNationalNumber(parsed.national)
   }, [value, resetKey])
 
+  useEffect(() => {
+    if (!countryCode || phoneCodeTouched.current) return
+    const previous = appliedCountry.current
+    if (previous === countryCode) return
+    appliedCountry.current = countryCode
+    if (previous === null && value.trim()) return
+
+    const nextCalling = COUNTRY_DIAL_CODES[countryCode]
+    if (!nextCalling) return
+    setSelectedCode(countryCode)
+    setCallingCode(nextCalling)
+    if (nationalRef.current) {
+      onChangeRef.current(formatE164(nextCalling, nationalRef.current))
+    }
+  }, [countryCode, value])
+
   const updateNational = (text: string) => {
     const digits = text.replace(/\D/g, '')
+    nationalRef.current = digits
     setNationalNumber(digits)
     onChange(formatE164(callingCode, digits))
   }
 
   const handleCountrySelect = (country: CountryValue) => {
+    phoneCodeTouched.current = true
     const nextCalling = COUNTRY_DIAL_CODES[country.cca2] ?? callingCode
     setSelectedCode(country.cca2)
     setCallingCode(nextCalling)

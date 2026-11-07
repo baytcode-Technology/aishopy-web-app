@@ -265,7 +265,7 @@ export default function PlatformSupportDetailPage() {
         ) : (
           <div className="flex-grow p-4 pb-2">
             {messages.map((item) => (
-              <SupportMessageBubble key={item.id} message={item} />
+              <SupportMessageBubble key={item.id} message={item} viewer="admin" />
             ))}
           </div>
         )}

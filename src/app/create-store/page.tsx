@@ -3,6 +3,7 @@
 import { AuthButton } from '@/components/auth/AuthButton'
 import { AuthInput } from '@/components/auth/AuthInput'
 import { AuthLayout } from '@/components/auth/AuthLayout'
+import { PhoneNumberField } from '@/components/store/PhoneNumberField'
 import { RequireAuth } from '@/components/auth/RequireAuth'
 import { Button } from '@/components/ui/Button'
 import { fetchIndustries } from '@/core/api/industries'
@@ -217,15 +218,14 @@ function CreateStoreForm() {
           </select>
         </label>
 
-        <AuthInput
+        <PhoneNumberField
           label="Contact number"
           value={whatsappNumber}
-          onChange={(e) => {
-            setWhatsappNumber(e.target.value)
+          onChange={(next) => {
+            setWhatsappNumber(next)
             clearFieldError('whatsapp_number')
           }}
-          placeholder="+91 98765 43210"
-          type="tel"
+          countryCode={country.cca2}
           error={errors.whatsapp_number}
         />
 
