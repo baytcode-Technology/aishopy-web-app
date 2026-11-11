@@ -28,6 +28,8 @@
   --color-brand-primary: #0a0a0b;
   --color-brand-green: #3eb056;
   --color-brand-on-primary: #ffffff;
+  --color-switch-off: #d4d4d8;
+  --color-switch-knob-off: #ffffff;
 }
 
 html,

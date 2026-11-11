@@ -31,6 +31,8 @@ const config: Config = {
         },
         charcoal: 'var(--color-charcoal)',
         surface: 'var(--color-surface)',
+        'switch-off': 'var(--color-switch-off)',
+        'switch-knob-off': 'var(--color-switch-knob-off)',
         gray: {
           50: 'var(--color-gray-50)',
           100: 'var(--color-gray-100)',

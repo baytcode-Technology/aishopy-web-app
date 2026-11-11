@@ -23,6 +23,8 @@ export type Palette = {
   overlay: string
   inkSoft: string
   inkCounter: string
+  switchOff: string
+  switchKnobOff: string
 }
 
 export const lightPalette: Palette = {
@@ -49,6 +51,8 @@ export const lightPalette: Palette = {
   overlay: 'rgba(10,10,11,0.45)',
   inkSoft: 'rgba(10,10,11,0.55)',
   inkCounter: 'rgba(10,10,11,0.65)',
+  switchOff: '#D4D4D8',
+  switchKnobOff: '#FFFFFF',
 }
 
 export const darkPalette: Palette = {
@@ -75,6 +79,8 @@ export const darkPalette: Palette = {
   overlay: 'rgba(0,0,0,0.65)',
   inkSoft: 'rgba(250,250,250,0.55)',
   inkCounter: 'rgba(250,250,250,0.65)',
+  switchOff: '#71717A',
+  switchKnobOff: '#FAFAFA',
 }
 
 export const palette = lightPalette
@@ -112,5 +118,7 @@ export function paletteToCssVars(p: Palette): Record<string, string> {
     '--color-brand-primary': p.ink,
     '--color-brand-green': p.brandGreen,
     '--color-brand-on-primary': p.surface,
+    '--color-switch-off': p.switchOff,
+    '--color-switch-knob-off': p.switchKnobOff,
   }
 }

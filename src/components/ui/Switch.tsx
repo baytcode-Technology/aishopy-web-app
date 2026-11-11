@@ -26,12 +26,14 @@ export function Switch({
       aria-label={ariaLabel}
       disabled={disabled}
       onClick={() => onValueChange(!value)}
-      className={`relative h-[31px] w-[51px] shrink-0 rounded-full ${value ? onClass : 'bg-gray-300'} ${
+      className={`relative h-[31px] w-[51px] shrink-0 rounded-full ${value ? onClass : 'bg-switch-off'} ${
         disabled ? 'opacity-45' : ''
       }`}
     >
       <span
-        className="absolute top-[2px] h-[27px] w-[27px] rounded-full bg-surface shadow"
+        className={`absolute top-[2px] h-[27px] w-[27px] rounded-full shadow ${
+          value ? 'bg-surface' : 'bg-switch-knob-off'
+        }`}
         style={{ left: value ? 22 : 2 }}
       />
     </button>
