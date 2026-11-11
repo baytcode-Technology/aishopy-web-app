@@ -10,18 +10,35 @@ import { useEffect, useState } from 'react'
 type Props = {
   order: Order
   storeId: number
+  courierTracking: boolean
   saving: boolean
   onSavingChange: (saving: boolean) => void
   onUpdated: (order: Order) => void
 }
 
+function formatPromisedLabel(value: string | null | undefined): string | null {
+  const trimmed = value?.trim()
+  if (!trimmed) return null
+  const date = new Date(`${trimmed}T00:00:00`)
+  if (Number.isNaN(date.getTime())) return trimmed
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+function orderHasCourier(order: Order): boolean {
+  return Boolean(
+    order.courier_name?.trim() || order.tracking_number?.trim() || order.tracking_url?.trim()
+  )
+}
+
 export function OrderDeliveryCard({
   order,
   storeId,
+  courierTracking,
   saving,
   onSavingChange,
   onUpdated,
 }: Props) {
+  const [open, setOpen] = useState(false)
   const [promisedBy, setPromisedBy] = useState('')
   const [delayNote, setDelayNote] = useState('')
   const [courierName, setCourierName] = useState('')
@@ -37,6 +54,11 @@ export function OrderDeliveryCard({
     setTrackingUrl(order.tracking_url ?? '')
   }, [order.id, order.promised_by, order.delay_note, order.courier_name, order.tracking_number, order.tracking_url])
 
+  const showCourier = courierTracking || orderHasCourier(order)
+  const dateLabel = formatPromisedLabel(order.promised_by)
+  const courierLabel = order.courier_name?.trim()
+  const summary = ['Delivery', dateLabel ?? 'No date yet', courierLabel || null].filter(Boolean).join(' · ')
+
   const save = async () => {
     if (saving) return
     onSavingChange(true)
@@ -46,11 +68,12 @@ export function OrderDeliveryCard({
         store_id: storeId,
         promised_by: promisedBy.trim() || null,
         delay_note: delayNote.trim() || null,
-        courier_name: courierName.trim() || null,
-        tracking_number: trackingNumber.trim() || null,
-        tracking_url: trackingUrl.trim() || null,
+        courier_name: showCourier ? courierName.trim() || null : order.courier_name ?? null,
+        tracking_number: showCourier ? trackingNumber.trim() || null : order.tracking_number ?? null,
+        tracking_url: showCourier ? trackingUrl.trim() || null : order.tracking_url ?? null,
       })
       onUpdated({ ...order, ...res.data.order, customers: order.customers, items: order.items })
+      setOpen(false)
     } catch (e) {
       setError(getErrorMessage(e, 'Could not save delivery details'))
     } finally {
@@ -59,36 +82,51 @@ export function OrderDeliveryCard({
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl border border-gray-200 bg-surface p-4">
-      <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-400">
-        Delivery & delay
-      </p>
-      {error ? <p className="text-sm text-[#E11D48]">{error}</p> : null}
-      <Input
-        label="Promised by"
-        type="date"
-        value={promisedBy}
-        onChange={(e) => setPromisedBy(e.target.value)}
-      />
-      <Input
-        label="Delay note"
-        value={delayNote}
-        onChange={(e) => setDelayNote(e.target.value)}
-        placeholder="Courier delay — extra 2 days"
-        multiline
-      />
-      <Input label="Courier" value={courierName} onChange={(e) => setCourierName(e.target.value)} />
-      <Input
-        label="Tracking number"
-        value={trackingNumber}
-        onChange={(e) => setTrackingNumber(e.target.value)}
-      />
-      <Input
-        label="Tracking URL"
-        value={trackingUrl}
-        onChange={(e) => setTrackingUrl(e.target.value)}
-      />
-      <Button label="Save delivery" onClick={() => void save()} disabled={saving} />
+    <div className="rounded-2xl border border-gray-200 bg-surface">
+      <button
+        type="button"
+        onClick={() => setOpen((value) => !value)}
+        className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left"
+        aria-expanded={open}
+      >
+        <span className="text-[15px] font-semibold text-ink">{summary}</span>
+        <span className="text-sm font-bold text-ink">{open ? '−' : '+'}</span>
+      </button>
+
+      {open ? (
+        <div className="flex flex-col gap-3 border-t border-gray-200 px-4 pb-4 pt-3">
+          {error ? <p className="text-sm text-danger">{error}</p> : null}
+          <Input
+            label="Promised by"
+            type="date"
+            value={promisedBy}
+            onChange={(e) => setPromisedBy(e.target.value)}
+          />
+          <Input
+            label="Delay note"
+            value={delayNote}
+            onChange={(e) => setDelayNote(e.target.value)}
+            placeholder="Extra 2 days"
+            multiline
+          />
+          {showCourier ? (
+            <>
+              <Input label="Courier" value={courierName} onChange={(e) => setCourierName(e.target.value)} />
+              <Input
+                label="Tracking number"
+                value={trackingNumber}
+                onChange={(e) => setTrackingNumber(e.target.value)}
+              />
+              <Input
+                label="Tracking URL"
+                value={trackingUrl}
+                onChange={(e) => setTrackingUrl(e.target.value)}
+              />
+            </>
+          ) : null}
+          <Button label="Save delivery" onClick={() => void save()} disabled={saving} />
+        </div>
+      ) : null}
     </div>
   )
 }
