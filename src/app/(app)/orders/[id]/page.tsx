@@ -13,6 +13,7 @@ import { fetchOrder, updateOrder } from '@/core/api/orders'
 import { getErrorMessage } from '@/core/lib/api-error'
 import { formatOrderNumber, type OrderStatusField } from '@/core/lib/order-status'
 import type { Order } from '@/core/types/order'
+import { parseShopPolicies } from '@/core/types/shop-policies'
 import { useOrdersUnread } from '@/providers/orders-unread-provider'
 import { useStore } from '@/providers/store-provider'
 import { useParams } from 'next/navigation'
@@ -182,6 +183,7 @@ export default function OrderDetailPage() {
               <OrderDeliveryCard
                 order={order}
                 storeId={store.id}
+                courierTracking={parseShopPolicies(store.shop_policies).courier_tracking}
                 saving={saving}
                 onSavingChange={setSaving}
                 onUpdated={setOrder}

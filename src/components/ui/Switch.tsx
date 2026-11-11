@@ -16,7 +16,7 @@ export function Switch({
   'aria-label': ariaLabel,
   onTrack = 'ink',
 }: Props) {
-  const onClass = onTrack === 'primary' ? 'bg-brand-primary' : 'bg-[#0A0A0B]'
+  const onClass = onTrack === 'primary' ? 'bg-brand-primary' : 'bg-ink'
 
   return (
     <button
@@ -26,12 +26,12 @@ export function Switch({
       aria-label={ariaLabel}
       disabled={disabled}
       onClick={() => onValueChange(!value)}
-      className={`relative h-[31px] w-[51px] shrink-0 rounded-full ${value ? onClass : 'bg-[#E4E4E7]'} ${
+      className={`relative h-[31px] w-[51px] shrink-0 rounded-full ${value ? onClass : 'bg-gray-300'} ${
         disabled ? 'opacity-45' : ''
       }`}
     >
       <span
-        className="absolute top-[2px] h-[27px] w-[27px] rounded-full bg-white shadow"
+        className="absolute top-[2px] h-[27px] w-[27px] rounded-full bg-surface shadow"
         style={{ left: value ? 22 : 2 }}
       />
     </button>

@@ -9,10 +9,30 @@ import { getErrorMessage } from '@/core/lib/api-error'
 import { EMPTY_SHOP_POLICIES, parseShopPolicies } from '@/core/types/shop-policies'
 import { useStore } from '@/providers/store-provider'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 
 function numField(value: number | null): string {
   return value == null ? '' : String(value)
+}
+
+function SectionCard({
+  title,
+  subtitle,
+  children,
+}: {
+  title: string
+  subtitle?: string
+  children: ReactNode
+}) {
+  return (
+    <section className="flex flex-col gap-4 rounded-[28px] border border-gray-200 bg-surface p-5">
+      <div className="flex flex-col gap-1">
+        <h2 className="text-base font-semibold text-ink">{title}</h2>
+        {subtitle ? <p className="text-[13px] leading-5 text-gray-500">{subtitle}</p> : null}
+      </div>
+      {children}
+    </section>
+  )
 }
 
 function ToggleRow({
@@ -25,9 +45,46 @@ function ToggleRow({
   onValueChange: (next: boolean) => void
 }) {
   return (
-    <div className="flex items-center justify-between rounded-2xl border border-gray-200 bg-surface px-4 py-3">
-      <p className="pr-3 text-[13px] font-bold tracking-wide text-gray-600">{label}</p>
+    <div className="flex items-center justify-between gap-3">
+      <p className="text-[15px] font-medium text-ink">{label}</p>
       <Switch value={value} onValueChange={onValueChange} aria-label={label} onTrack="primary" />
+    </div>
+  )
+}
+
+function ReturnsChoice({
+  value,
+  onChange,
+}: {
+  value: boolean | null
+  onChange: (next: boolean | null) => void
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-[13px] font-bold tracking-wide text-gray-600">Returns</p>
+      <div className="grid grid-cols-3 gap-1 rounded-xl bg-gray-100 p-1">
+        {(
+          [
+            ['Not set', null],
+            ['Yes', true],
+            ['No', false],
+          ] as const
+        ).map(([label, next]) => {
+          const selected = value === next
+          return (
+            <button
+              key={label}
+              type="button"
+              onClick={() => onChange(next)}
+              className={`rounded-lg px-3 py-2.5 text-[13px] font-semibold ${
+                selected ? 'bg-ink text-brand-on-primary' : 'text-ink'
+              }`}
+            >
+              {label}
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -54,6 +111,7 @@ export default function ShopPoliciesPage() {
   const [returnNote, setReturnNote] = useState('')
   const [offerNote, setOfferNote] = useState('')
   const [pickupNote, setPickupNote] = useState('')
+  const [courierTracking, setCourierTracking] = useState(false)
 
   useEffect(() => {
     if (!store) return
@@ -74,6 +132,7 @@ export default function ShopPoliciesPage() {
     setReturnNote(p.return_note ?? '')
     setOfferNote(p.current_offer_note ?? '')
     setPickupNote(p.pickup_note ?? '')
+    setCourierTracking(p.courier_tracking)
   }, [store])
 
   const save = async () => {
@@ -99,6 +158,7 @@ export default function ShopPoliciesPage() {
           return_note: returnNote,
           current_offer_note: offerNote,
           pickup_note: pickupNote,
+          courier_tracking: courierTracking,
         }),
       })
       await refreshStore()
@@ -119,101 +179,113 @@ export default function ShopPoliciesPage() {
       />
       <div className="flex flex-col gap-4 px-5 pb-10 pt-4">
         {notice ? <p className="text-sm font-semibold text-brand-green">{notice}</p> : null}
-        {error ? <p className="text-sm text-[#E11D48]">{error}</p> : null}
-        <p className="text-sm text-gray-500">
-          Leave a field blank if staff should check. Chat Boat will not invent a fee, date, or
-          discount.
-        </p>
-        <ToggleRow label="Physical shop" value={hasPhysicalStore} onValueChange={setHasPhysicalStore} />
-        <Input label="Address" value={address} onChange={(e) => setAddress(e.target.value)} />
-        <Input
-          label="Shop hours"
-          value={hours}
-          onChange={(e) => setHours(e.target.value)}
-          placeholder="Mon–Sat 10am–8pm"
-        />
-        <Input
-          label="Default delivery (business days)"
-          value={defaultDays}
-          onChange={(e) => setDefaultDays(e.target.value)}
-          inputMode="numeric"
-          placeholder="e.g. 2"
-        />
-        <Input
-          label="Delivery fee"
-          value={deliveryFee}
-          onChange={(e) => setDeliveryFee(e.target.value)}
-          inputMode="decimal"
-        />
-        <Input
-          label="Free delivery above"
-          value={freeAbove}
-          onChange={(e) => setFreeAbove(e.target.value)}
-          inputMode="decimal"
-        />
-        <ToggleRow label="Same-day delivery" value={sameDay} onValueChange={setSameDay} />
-        <ToggleRow label="Next-day delivery" value={nextDay} onValueChange={setNextDay} />
-        <Input
-          label="Service area"
-          value={serviceArea}
-          onChange={(e) => setServiceArea(e.target.value)}
-          placeholder="Kerala"
-        />
-        <div className="flex flex-col gap-2">
-          <p className="text-[13px] font-bold tracking-wide text-gray-600">Returns</p>
-          <div className="grid grid-cols-3 gap-2">
-            {(
-              [
-                ['Not set', null],
-                ['Yes', true],
-                ['No', false],
-              ] as const
-            ).map(([label, value]) => {
-              const selected = returnsAllowed === value
-              return (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={() => setReturnsAllowed(value)}
-                  className={`rounded-2xl border px-3 py-3 text-[13px] font-bold ${selected ? 'border-brand-primary bg-brand-primary text-white' : 'border-gray-200 bg-surface text-gray-700'}`}
-                >
-                  {label}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-        <Input
-          label="Return window (days)"
-          value={returnDays}
-          onChange={(e) => setReturnDays(e.target.value)}
-          inputMode="numeric"
-        />
-        <ToggleRow label="Exchange allowed" value={exchangeAllowed} onValueChange={setExchangeAllowed} />
-        <Input
-          label="Refund after cancel (days)"
-          value={refundDays}
-          onChange={(e) => setRefundDays(e.target.value)}
-          inputMode="numeric"
-        />
-        <Input
-          label="Return note"
-          value={returnNote}
-          onChange={(e) => setReturnNote(e.target.value)}
-          multiline
-        />
-        <Input
-          label="Current offer"
-          value={offerNote}
-          onChange={(e) => setOfferNote(e.target.value)}
-          placeholder="Leave blank if none"
-        />
-        <Input label="Pickup note" value={pickupNote} onChange={(e) => setPickupNote(e.target.value)} />
-        <Button label={saving ? 'Saving…' : 'Save policies'} onClick={() => void save()} disabled={saving || !store} />
-        <p className="text-sm text-gray-500">
+        {error ? <p className="text-sm text-danger">{error}</p> : null}
+        <SectionCard
+          title="Shop"
+          subtitle="Leave a field blank if staff should check. Chat Boat will not invent a fee, date, or discount."
+        >
+          <ToggleRow
+            label="Physical shop"
+            value={hasPhysicalStore}
+            onValueChange={setHasPhysicalStore}
+          />
+          <Input
+            label="Address"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            multiline
+          />
+          <Input
+            label="Shop hours"
+            value={hours}
+            onChange={(e) => setHours(e.target.value)}
+            placeholder="Mon–Sat 10am–8pm"
+          />
+        </SectionCard>
+        <SectionCard title="Delivery">
+          <Input
+            label="Default delivery (business days)"
+            value={defaultDays}
+            onChange={(e) => setDefaultDays(e.target.value)}
+            inputMode="numeric"
+            placeholder="e.g. 2"
+          />
+          <Input
+            label={`Delivery fee (${store?.currency ?? 'INR'})`}
+            value={deliveryFee}
+            onChange={(e) => setDeliveryFee(e.target.value)}
+            inputMode="decimal"
+          />
+          <Input
+            label={`Free delivery above (${store?.currency ?? 'INR'})`}
+            value={freeAbove}
+            onChange={(e) => setFreeAbove(e.target.value)}
+            inputMode="decimal"
+          />
+          <ToggleRow
+            label="Courier tracking"
+            value={courierTracking}
+            onValueChange={setCourierTracking}
+          />
+          <ToggleRow label="Same-day delivery" value={sameDay} onValueChange={setSameDay} />
+          <ToggleRow label="Next-day delivery" value={nextDay} onValueChange={setNextDay} />
+          <Input
+            label="Service area"
+            value={serviceArea}
+            onChange={(e) => setServiceArea(e.target.value)}
+            placeholder="Kerala"
+          />
+        </SectionCard>
+        <SectionCard title="Returns">
+          <ReturnsChoice value={returnsAllowed} onChange={setReturnsAllowed} />
+          <Input
+            label="Return window (days)"
+            value={returnDays}
+            onChange={(e) => setReturnDays(e.target.value)}
+            inputMode="numeric"
+          />
+          <ToggleRow
+            label="Exchange allowed"
+            value={exchangeAllowed}
+            onValueChange={setExchangeAllowed}
+          />
+          <Input
+            label="Refund after cancel (days)"
+            value={refundDays}
+            onChange={(e) => setRefundDays(e.target.value)}
+            inputMode="numeric"
+          />
+          <Input
+            label="Return note"
+            value={returnNote}
+            onChange={(e) => setReturnNote(e.target.value)}
+            multiline
+          />
+        </SectionCard>
+        <SectionCard title="Notes">
+          <Input
+            label="Current offer"
+            value={offerNote}
+            onChange={(e) => setOfferNote(e.target.value)}
+            placeholder="Leave blank if none"
+            multiline
+          />
+          <Input
+            label="Pickup note"
+            value={pickupNote}
+            onChange={(e) => setPickupNote(e.target.value)}
+            multiline
+          />
+        </SectionCard>
+        <p className="px-1 text-sm leading-5 text-gray-500">
           Slow items: set extra delivery days on the product. A delayed order: open the order and add
-          a promised date, delay note, courier, or tracking link.
+          a promised date or delay note. Courier and tracking appear when Courier tracking is on.
         </p>
+        <Button
+          label={saving ? 'Saving…' : 'Save policies'}
+          onClick={() => void save()}
+          disabled={saving || !store}
+        />
       </div>
     </main>
   )
