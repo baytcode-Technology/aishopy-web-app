@@ -1,11 +1,16 @@
 'use client'
 
+import {
+  hasVideoInput,
+  TrackingBarcodeScanner,
+  type CameraProblem,
+} from '@/components/orders/TrackingBarcodeScanner'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { updateOrder } from '@/core/api/orders'
 import { getErrorMessage } from '@/core/lib/api-error'
 import type { Order } from '@/core/types/order'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 type Props = {
   order: Order
@@ -45,6 +50,33 @@ export function OrderDeliveryCard({
   const [trackingNumber, setTrackingNumber] = useState('')
   const [trackingUrl, setTrackingUrl] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [cameraReady, setCameraReady] = useState(false)
+  const [scanOpen, setScanOpen] = useState(false)
+  const [cameraNote, setCameraNote] = useState<string | null>(null)
+
+  useEffect(() => {
+    let active = true
+    void hasVideoInput().then((available) => {
+      if (active) setCameraReady(available)
+    })
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const closeScanner = useCallback(() => setScanOpen(false), [])
+  const onScanned = useCallback((value: string) => {
+    setTrackingNumber(value)
+    setScanOpen(false)
+  }, [])
+  const onCameraProblem = useCallback((problem: CameraProblem) => {
+    setScanOpen(false)
+    setCameraNote(
+      problem === 'denied'
+        ? 'Camera access is off. Type the tracking number instead.'
+        : 'Camera not available. Type the tracking number instead.',
+    )
+  }, [])
 
   useEffect(() => {
     setPromisedBy(order.promised_by ?? '')
@@ -112,10 +144,35 @@ export function OrderDeliveryCard({
           {showCourier ? (
             <>
               <Input label="Courier" value={courierName} onChange={(e) => setCourierName(e.target.value)} />
-              <Input
-                label="Tracking number"
-                value={trackingNumber}
-                onChange={(e) => setTrackingNumber(e.target.value)}
+              <div className="flex items-end gap-2">
+                <div className="min-w-0 flex-1">
+                  <Input
+                    label="Tracking number"
+                    value={trackingNumber}
+                    onChange={(e) => setTrackingNumber(e.target.value)}
+                  />
+                </div>
+                {cameraReady ? (
+                  <Button
+                    label="Scan"
+                    variant="outline"
+                    className="shrink-0"
+                    style={{ width: 'auto' }}
+                    onClick={() => {
+                      setCameraNote(null)
+                      setScanOpen(true)
+                    }}
+                  />
+                ) : null}
+              </div>
+              {cameraNote ? (
+                <p className="text-[13px] leading-5 text-gray-500">{cameraNote}</p>
+              ) : null}
+              <TrackingBarcodeScanner
+                open={scanOpen}
+                onClose={closeScanner}
+                onScanned={onScanned}
+                onCameraProblem={onCameraProblem}
               />
               <Input
                 label="Tracking URL"
