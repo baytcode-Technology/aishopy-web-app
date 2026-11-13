@@ -65,8 +65,9 @@ export function OrderDeliveryCard({
   }, [])
 
   const closeScanner = useCallback(() => setScanOpen(false), [])
-  const onScanned = useCallback((value: string) => {
-    setTrackingNumber(value)
+  const onScanned = useCallback((scan: { trackingNumber: string; courierName: string }) => {
+    setTrackingNumber(scan.trackingNumber)
+    setCourierName((current) => (current.trim() ? current : scan.courierName || current))
     setScanOpen(false)
   }, [])
   const onCameraProblem = useCallback((problem: CameraProblem) => {

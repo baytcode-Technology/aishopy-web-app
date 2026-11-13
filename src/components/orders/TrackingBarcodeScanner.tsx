@@ -1,7 +1,7 @@
 'use client'
 
+import { parseLabelScan, type LabelScan } from '@/components/orders/parse-label-scan'
 import { Button } from '@/components/ui/Button'
-import type { IScannerControls } from '@zxing/browser'
 import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 
@@ -10,11 +10,14 @@ export type CameraProblem = 'denied' | 'unavailable'
 type Props = {
   open: boolean
   onClose: () => void
-  onScanned: (value: string) => void
+  onScanned: (scan: LabelScan) => void
   onCameraProblem: (problem: CameraProblem) => void
 }
 
 const SCAN_INTERVAL_MS = 150
+const MATRIX_WAIT_MS = 400
+const FRAME_INSET_X = 32
+const FRAME_HEIGHT = 112
 
 const CAMERA_CONSTRAINTS: MediaStreamConstraints = {
   audio: false,
@@ -25,7 +28,7 @@ const CAMERA_CONSTRAINTS: MediaStreamConstraints = {
   },
 }
 
-const NATIVE_FORMATS = [
+const LINEAR_FORMATS = new Set([
   'code_128',
   'code_39',
   'code_93',
@@ -35,14 +38,23 @@ const NATIVE_FORMATS = [
   'itf',
   'upc_a',
   'upc_e',
+])
+
+const NATIVE_FORMATS = [
+  ...LINEAR_FORMATS,
   'qr_code',
   'pdf417',
   'data_matrix',
   'aztec',
 ]
 
+type DetectedCode = {
+  rawValue: string
+  format: string
+}
+
 type NativeBarcodeDetector = {
-  detect: (source: HTMLVideoElement) => Promise<Array<{ rawValue: string }>>
+  detect: (source: CanvasImageSource) => Promise<DetectedCode[]>
 }
 
 type NativeBarcodeDetectorClass = {
@@ -71,6 +83,46 @@ async function enableContinuousFocus(stream: MediaStream): Promise<void> {
   await track
     .applyConstraints({ advanced: [{ focusMode: 'continuous' } as MediaTrackConstraintSet] })
     .catch(() => undefined)
+}
+
+function cropAimFrame(video: HTMLVideoElement, canvas: HTMLCanvasElement): boolean {
+  const displayW = video.clientWidth
+  const displayH = video.clientHeight
+  const videoW = video.videoWidth
+  const videoH = video.videoHeight
+  if (!displayW || !displayH || !videoW || !videoH) return false
+
+  const scale = Math.max(displayW / videoW, displayH / videoH)
+  const visibleW = displayW / scale
+  const visibleH = displayH / scale
+  const offsetX = (videoW - visibleW) / 2
+  const offsetY = (videoH - visibleH) / 2
+  const frameW = Math.max(displayW - FRAME_INSET_X * 2, 1)
+  const frameH = FRAME_HEIGHT
+  const frameX = FRAME_INSET_X
+  const frameY = (displayH - frameH) / 2
+
+  const srcX = Math.max(0, offsetX + frameX / scale)
+  const srcY = Math.max(0, offsetY + frameY / scale)
+  const srcW = Math.min(videoW - srcX, frameW / scale)
+  const srcH = Math.min(videoH - srcY, frameH / scale)
+  if (srcW < 1 || srcH < 1) return false
+
+  canvas.width = Math.round(srcW)
+  canvas.height = Math.round(srcH)
+  const context = canvas.getContext('2d', { willReadFrequently: true })
+  if (!context) return false
+  context.drawImage(video, srcX, srcY, srcW, srcH, 0, 0, canvas.width, canvas.height)
+  return true
+}
+
+function chooseCode(codes: DetectedCode[]): DetectedCode | null {
+  const readable = codes.filter((code) => code.rawValue.trim())
+  return (
+    readable.find((code) => LINEAR_FORMATS.has(code.format)) ??
+    readable[0] ??
+    null
+  )
 }
 
 export function canUseCamera(): boolean {
@@ -108,24 +160,35 @@ export function TrackingBarcodeScanner({ open, onClose, onScanned, onCameraProbl
     let cancelled = false
     let locked = false
     let stream: MediaStream | null = null
-    let controls: IScannerControls | null = null
     let timer: ReturnType<typeof setTimeout> | undefined
+    let matrixTimer: ReturnType<typeof setTimeout> | undefined
+    const canvas = document.createElement('canvas')
 
     const stopCamera = () => {
       clearTimeout(timer)
-      controls?.stop()
-      controls = null
+      clearTimeout(matrixTimer)
       stream?.getTracks().forEach((track) => track.stop())
       stream = null
       video.srcObject = null
     }
 
-    const finish = (raw: string) => {
-      const value = raw.trim()
-      if (!value || locked || cancelled) return
+    const finish = (scan: LabelScan) => {
+      if (!scan.trackingNumber || locked || cancelled) return
       locked = true
       stopCamera()
-      onScannedRef.current(value)
+      onScannedRef.current(scan)
+    }
+
+    const accept = (raw: string, linear: boolean) => {
+      const scan = parseLabelScan(raw)
+      if (!scan.trackingNumber || locked || cancelled) return
+      if (linear) {
+        clearTimeout(matrixTimer)
+        finish(scan)
+        return
+      }
+      if (matrixTimer) return
+      matrixTimer = setTimeout(() => finish(scan), MATRIX_WAIT_MS)
     }
 
     void (async () => {
@@ -137,28 +200,25 @@ export function TrackingBarcodeScanner({ open, onClose, onScanned, onCameraProbl
         }
         await enableContinuousFocus(stream)
         if (cancelled) return
+        video.srcObject = stream
+        await video.play().catch(() => undefined)
+        if (cancelled) return
 
         const detector = await createNativeDetector()
         if (cancelled) return
 
         if (detector) {
-          video.srcObject = stream
-          await video.play().catch(() => undefined)
           const tick = async () => {
             if (cancelled || locked) return
-            if (video.readyState >= 2) {
+            if (video.readyState >= 2 && cropAimFrame(video, canvas)) {
               try {
-                const codes = await detector.detect(video)
-                const first = codes.find((code) => code.rawValue.trim())
-                if (first) {
-                  finish(first.rawValue)
-                  return
-                }
+                const chosen = chooseCode(await detector.detect(canvas))
+                if (chosen) accept(chosen.rawValue, LINEAR_FORMATS.has(chosen.format))
               } catch {
                 // The next frame is tried again.
               }
             }
-            timer = setTimeout(() => void tick(), SCAN_INTERVAL_MS)
+            if (!locked) timer = setTimeout(() => void tick(), SCAN_INTERVAL_MS)
           }
           void tick()
           return
@@ -169,39 +229,35 @@ export function TrackingBarcodeScanner({ open, onClose, onScanned, onCameraProbl
           import('@zxing/library'),
         ])
         if (cancelled) return
+        const linearFormats = new Set<number>([
+          BarcodeFormat.CODE_128,
+          BarcodeFormat.CODE_39,
+          BarcodeFormat.CODE_93,
+          BarcodeFormat.CODABAR,
+          BarcodeFormat.EAN_13,
+          BarcodeFormat.EAN_8,
+          BarcodeFormat.ITF,
+          BarcodeFormat.UPC_A,
+          BarcodeFormat.UPC_E,
+        ])
         const hints = new Map<number, unknown>([
-          [
-            DecodeHintType.POSSIBLE_FORMATS,
-            [
-              BarcodeFormat.CODE_128,
-              BarcodeFormat.CODE_39,
-              BarcodeFormat.CODE_93,
-              BarcodeFormat.CODABAR,
-              BarcodeFormat.EAN_13,
-              BarcodeFormat.EAN_8,
-              BarcodeFormat.ITF,
-              BarcodeFormat.UPC_A,
-              BarcodeFormat.UPC_E,
-              BarcodeFormat.QR_CODE,
-              BarcodeFormat.PDF_417,
-              BarcodeFormat.DATA_MATRIX,
-              BarcodeFormat.AZTEC,
-            ],
-          ],
+          [DecodeHintType.POSSIBLE_FORMATS, [...linearFormats, BarcodeFormat.QR_CODE, BarcodeFormat.PDF_417, BarcodeFormat.DATA_MATRIX, BarcodeFormat.AZTEC]],
           [DecodeHintType.TRY_HARDER, true],
         ])
-        const reader = new BrowserMultiFormatReader(hints, {
-          delayBetweenScanAttempts: SCAN_INTERVAL_MS,
-          delayBetweenScanSuccess: SCAN_INTERVAL_MS,
-        })
-        const started = await reader.decodeFromStream(stream, video, (result) => {
-          if (result) finish(result.getText())
-        })
-        if (cancelled || locked) {
-          started.stop()
-          return
+        const reader = new BrowserMultiFormatReader(hints)
+        const tick = () => {
+          if (cancelled || locked) return
+          if (video.readyState >= 2 && cropAimFrame(video, canvas)) {
+            try {
+              const result = reader.decodeFromCanvas(canvas)
+              accept(result.getText(), linearFormats.has(result.getBarcodeFormat()))
+            } catch {
+              // No code in this frame.
+            }
+          }
+          if (!locked) timer = setTimeout(tick, SCAN_INTERVAL_MS)
         }
-        controls = started
+        tick()
       } catch (error) {
         stopCamera()
         if (cancelled) return
@@ -244,7 +300,9 @@ export function TrackingBarcodeScanner({ open, onClose, onScanned, onCameraProbl
       <div className="flex min-h-0 w-full flex-1 flex-col bg-surface lg:max-h-[720px] lg:max-w-lg lg:flex-none lg:rounded-3xl lg:shadow-xl">
         <div className="px-5 pb-3 pt-[max(env(safe-area-inset-top),16px)] lg:pt-5">
           <h2 className="text-[22px] font-semibold text-ink">Scan label</h2>
-          <p className="mt-1 text-[14px] leading-5 text-gray-500">Hold the label about 15 cm away, with the barcode inside the frame.</p>
+          <p className="mt-1 text-[14px] leading-5 text-gray-500">
+            Hold the label about 15 cm away, with the barcode inside the frame.
+          </p>
         </div>
         <div className="relative mx-5 mb-4 min-h-[280px] flex-1 overflow-hidden rounded-3xl bg-ink-overlay lg:aspect-[3/4] lg:flex-none">
           <video
