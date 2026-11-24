@@ -1,6 +1,7 @@
 'use client'
 
 import { MenuIcon } from '@/components/ui/MenuIcons'
+import { useAppTheme } from '@/providers/theme-provider'
 import type { ReactNode } from 'react'
 
 type PlanCardTone = 'default' | 'starter-limited' | 'trial-offer'
@@ -36,20 +37,27 @@ export function PlanCard({
 }: Props) {
   const isStarterLimited = tone === 'starter-limited'
   const isTrialOffer = tone === 'trial-offer' && !!compareAtPrice
+  const { isDark } = useAppTheme()
+
+  const toneClass = isStarterLimited
+    ? isDark
+      ? selected
+        ? 'border-ink'
+        : 'border-gray-200'
+      : selected
+        ? 'border-[#EF4444] bg-[#FEF2F2]'
+        : 'border-[#FECACA] bg-[#FEF2F2]'
+    : isTrialOffer && selected
+      ? isDark
+        ? 'border-brand-green'
+        : 'border-brand-green bg-[#E8F8EC]'
+      : selected
+        ? 'border-brand-primary'
+        : 'border-gray-200'
 
   const card = (
     <div
-      className={`overflow-hidden rounded-[28px] border bg-surface shadow-sm ${
-        isStarterLimited
-          ? selected
-            ? 'border-[#EF4444] bg-[#FEF2F2]'
-            : 'border-[#FECACA] bg-[#FEF2F2]'
-          : isTrialOffer && selected
-            ? 'border-brand-green bg-[#E8F8EC]'
-            : selected
-              ? 'border-brand-primary'
-              : 'border-gray-200'
-      } ${className}`}
+      className={`overflow-hidden rounded-[28px] border bg-surface shadow-sm ${toneClass} ${className}`}
     >
       <div className="px-6 pb-4 pt-6">
         <div className="flex items-start justify-between gap-3">
