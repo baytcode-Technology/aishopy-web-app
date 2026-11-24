@@ -88,12 +88,15 @@ export async function openWhatsAppEmbeddedSignupAuthSession(input: {
 
   return new Promise((resolve) => {
     let settled = false
+    let sawOpen = false
+    let closedAt: number | null = null
     const channel = new BroadcastChannel(WHATSAPP_OAUTH_CHANNEL)
 
     const finish = (result: WhatsAppAuthSessionResult | WhatsAppAuthSessionError) => {
       if (settled) return
       settled = true
       window.clearInterval(timer)
+      window.clearTimeout(giveUp)
       channel.close()
       try {
         popup.close()
@@ -116,13 +119,26 @@ export async function openWhatsAppEmbeddedSignupAuthSession(input: {
     }
 
     const timer = window.setInterval(() => {
-      if (popup.closed) {
-        finish({ type: 'dismissed' })
+      let closed = false
+      try {
+        closed = popup.closed
+      } catch {
+        closed = true
       }
+      if (!closed) {
+        sawOpen = true
+        closedAt = null
+        return
+      }
+      // The API page can report this popup closed while Meta is still open.
+      // Wait until it has actually been open, then give the return page time to send the code.
+      if (!sawOpen) return
+      if (closedAt == null) closedAt = Date.now()
+      if (Date.now() - closedAt >= 3000) finish({ type: 'dismissed' })
     }, 400)
 
-    window.setTimeout(() => {
-      if (!settled && popup.closed) finish({ type: 'dismissed' })
+    const giveUp = window.setTimeout(() => {
+      if (!settled) finish({ type: 'dismissed' })
     }, 10 * 60 * 1000)
   })
 }
