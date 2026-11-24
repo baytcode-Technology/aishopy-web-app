@@ -66,7 +66,8 @@ export type WhatsAppCompleteOnboardingResponse = {
 }
 
 export async function getWhatsAppConnectUrl(storeId: number): Promise<WhatsAppConnectResponse> {
-  return authenticatedFetch<WhatsAppConnectResponse>(`${endpoints.whatsappConnect}?${qs(storeId)}`)
+  const query = new URLSearchParams({ store_id: String(storeId), client: 'web' })
+  return authenticatedFetch<WhatsAppConnectResponse>(`${endpoints.whatsappConnect}?${query}`)
 }
 
 export async function completeWhatsAppOnboarding(
