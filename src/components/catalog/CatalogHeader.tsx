@@ -14,6 +14,8 @@ type Props = {
   onBack?: () => void
   backHref?: string
   showSettings?: boolean
+  /** Short brand-green tick under the subtitle. */
+  subtitleMark?: boolean
 }
 
 export function CatalogHeader({
@@ -23,6 +25,7 @@ export function CatalogHeader({
   onBack,
   backHref,
   showSettings = true,
+  subtitleMark = false,
 }: Props) {
   const showBack = Boolean(onBack || backHref)
 
@@ -56,6 +59,9 @@ export function CatalogHeader({
             ) : null}
             <Heading as="h1">{title}</Heading>
             {subtitle ? <Subtitle className="mt-1.5">{subtitle}</Subtitle> : null}
+            {subtitle && subtitleMark ? (
+              <span className="mt-2 block h-[3px] w-14 rounded-full bg-brand-green" />
+            ) : null}
           </div>
           <div className="flex shrink-0 items-center gap-2 pt-0.5">
             {right}

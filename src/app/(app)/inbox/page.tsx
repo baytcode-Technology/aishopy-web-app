@@ -220,6 +220,7 @@ export default function InboxPage() {
       <CatalogHeader
         title="Messages"
         subtitle={headerSubtitle}
+        subtitleMark={headerSubtitle === 'Loading conversations…'}
         right={
           <button
             type="button"

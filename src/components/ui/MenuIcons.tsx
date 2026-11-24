@@ -46,6 +46,7 @@ export const MENU_ICON_NAMES = [
   'moon-o',
   'exclamation-triangle',
   'crown',
+  'gem',
 ] as const
 
 export type MenuIconName = (typeof MENU_ICON_NAMES)[number]
@@ -111,6 +112,7 @@ const PATHS: Record<MenuIconName, string> = {
     'M12 3 1 21h22L12 3Zm0 6 1.2 6h-2.4L12 9Zm0 10a1.2 1.2 0 1 0 0-2.4A1.2 1.2 0 0 0 12 19Z',
   crown:
     'M3 8 7.5 13 12 6l4.5 7L21 8l-1 11H4L3 8Z',
+  gem: 'M12 2 19.6 9.2 12 22 4.4 9.2 12 2Z',
 }
 
 export function MenuIcon({ name, className = 'h-4 w-4' }: { name: MenuIconName; className?: string }) {
