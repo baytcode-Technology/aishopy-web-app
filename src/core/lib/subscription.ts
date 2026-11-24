@@ -117,9 +117,11 @@ export function formatSubscriptionExpiry(expiresAt: string | null | undefined): 
   })
 }
 
-export const CHAT_GATE_FEATURES = [
-  'WhatsApp inbox integration',
-  'Instagram inbox integration',
-  'AI auto replies',
-  'AI product recommendations',
-] as const
+export type ChatGateIcon = 'whatsapp' | 'instagram' | 'robot' | 'chart'
+
+export const CHAT_GATE_FEATURES: readonly { icon: ChatGateIcon; label: string }[] = [
+  { icon: 'whatsapp', label: 'WhatsApp inbox integration' },
+  { icon: 'instagram', label: 'Instagram inbox integration' },
+  { icon: 'robot', label: 'AI auto replies' },
+  { icon: 'chart', label: 'AI product recommendations' },
+]
