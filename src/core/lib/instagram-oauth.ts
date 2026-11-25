@@ -1,4 +1,11 @@
 import type { InstagramConnectionStatus } from '@/core/api/instagram-connect'
+import {
+  broadcastOAuth,
+  clearOAuthStoreId,
+  loadOAuthStoreId,
+  openAuthPopup,
+  persistOAuthStoreId,
+} from '@/core/lib/oauth-popup'
 
 export const INSTAGRAM_APP_AUTH_REDIRECT_URI = 'aishopyapp://instagram-oauth'
 export const INSTAGRAM_OAUTH_CHANNEL = 'aishopy-instagram-oauth'
@@ -33,68 +40,36 @@ export function parseInstagramOAuthRedirectParams(params: {
   return { connected, username, error }
 }
 
-function popupFeatures(): string {
-  const width = 520
-  const height = 720
-  const left = Math.max(0, Math.round(window.screenX + (window.outerWidth - width) / 2))
-  const top = Math.max(0, Math.round(window.screenY + (window.outerHeight - height) / 2))
-  return `popup=yes,width=${width},height=${height},left=${left},top=${top},noopener=no`
-}
-
 export function persistInstagramOAuthStoreId(storeId: number): void {
-  sessionStorage.setItem(INSTAGRAM_OAUTH_STORE_KEY, String(storeId))
+  persistOAuthStoreId(INSTAGRAM_OAUTH_STORE_KEY, storeId)
 }
 
 export function loadInstagramOAuthStoreId(): number | null {
-  const raw = sessionStorage.getItem(INSTAGRAM_OAUTH_STORE_KEY)
-  if (!raw) return null
-  const id = Number(raw)
-  return Number.isFinite(id) ? id : null
+  return loadOAuthStoreId(INSTAGRAM_OAUTH_STORE_KEY)
 }
 
 export function clearInstagramOAuthStoreId(): void {
-  sessionStorage.removeItem(INSTAGRAM_OAUTH_STORE_KEY)
+  clearOAuthStoreId(INSTAGRAM_OAUTH_STORE_KEY)
 }
 
 export function broadcastInstagramOAuth(payload: InstagramOAuthMessage): void {
-  try {
-    const channel = new BroadcastChannel(INSTAGRAM_OAUTH_CHANNEL)
-    channel.postMessage(payload)
-    channel.close()
-  } catch {
-    // BroadcastChannel unavailable
-  }
+  broadcastOAuth(INSTAGRAM_OAUTH_CHANNEL, payload)
 }
 
-export async function openInstagramAuthSession(input: {
+export function openInstagramAuthSession(input: {
   connectUrl: string
   pollStatus?: () => Promise<InstagramConnectionStatus | null>
 }): Promise<InstagramAuthSessionResult | InstagramAuthSessionError> {
-  const popup = window.open(input.connectUrl, 'aishopy-instagram-oauth', popupFeatures())
-  if (!popup) {
-    window.location.assign(input.connectUrl)
-    return { type: 'dismissed' }
-  }
+  const dismissed = { type: 'dismissed' } as const
 
-  return new Promise((resolve) => {
-    let settled = false
-    const channel = new BroadcastChannel(INSTAGRAM_OAUTH_CHANNEL)
-
-    const finish = (result: InstagramAuthSessionResult | InstagramAuthSessionError) => {
-      if (settled) return
-      settled = true
-      window.clearInterval(timer)
-      channel.close()
-      try {
-        popup.close()
-      } catch {
-        // already closed
-      }
-      resolve(result)
-    }
-
-    channel.onmessage = (event: MessageEvent<InstagramOAuthMessage>) => {
-      const data = event.data
+  return openAuthPopup<InstagramAuthSessionResult | InstagramAuthSessionError>({
+    url: input.connectUrl,
+    windowName: 'aishopy-instagram-oauth',
+    channelName: INSTAGRAM_OAUTH_CHANNEL,
+    blockedResult: dismissed,
+    tickMs: 1500,
+    onMessage: (raw, finish) => {
+      const data = raw as InstagramOAuthMessage | null
       if (!data) return
       if (data.error) {
         finish({ type: 'error', message: data.error })
@@ -103,9 +78,8 @@ export async function openInstagramAuthSession(input: {
       if (data.connected) {
         finish({ connected: true, username: data.username ?? null })
       }
-    }
-
-    const timer = window.setInterval(() => {
+    },
+    onTick: (popup, finish) => {
       void (async () => {
         if (input.pollStatus) {
           try {
@@ -134,9 +108,9 @@ export async function openInstagramAuthSession(input: {
               // fall through
             }
           }
-          finish({ type: 'dismissed' })
+          finish(dismissed)
         }
       })()
-    }, 1500)
+    },
   })
 }
